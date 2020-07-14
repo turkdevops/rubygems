@@ -91,7 +91,7 @@ class TestGemPackage < Gem::Package::TarTestCase
       'SHA512' => {
         'metadata.gz' => metadata_sha512,
         'data.tar.gz' => Digest::SHA512.hexdigest(tar),
-      }
+      },
     }
 
     if defined?(OpenSSL::Digest)
