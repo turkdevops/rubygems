@@ -141,8 +141,14 @@ RSpec.describe "bundle install with gem sources" do
     end
 
     it "does not install the development dependency" do
+      build_repo2 do
+        build_gem "with_development_dependency" do |s|
+          s.add_development_dependency "activesupport", "= 2.3.5"
+        end
+      end
+
       install_gemfile <<-G
-        source "#{file_uri_for(gem_repo1)}"
+        source "#{file_uri_for(gem_repo2)}"
         gem "with_development_dependency"
       G
 
@@ -216,6 +222,18 @@ RSpec.describe "bundle install with gem sources" do
       expect(the_bundle).to include_gems "rack 1.0.0", "activesupport 2.3.5"
     end
 
+    it "loads env plugins" do
+      plugin_msg = "hello from an env plugin!"
+      create_file "plugins/rubygems_plugin.rb", "puts '#{plugin_msg}'"
+      rubylib = ENV["RUBYLIB"].to_s.split(File::PATH_SEPARATOR).unshift(bundled_app("plugins").to_s).join(File::PATH_SEPARATOR)
+      install_gemfile <<-G, :env => { "RUBYLIB" => rubylib }
+        source "#{file_uri_for(gem_repo1)}"
+        gem "rack"
+      G
+
+      expect(last_command.stdboth).to include(plugin_msg)
+    end
+
     describe "with a gem that installs multiple platforms" do
       it "installs gems for the local platform as first choice" do
         skip "version is 1.0, not 1.0.0" if Gem.win_platform?
@@ -273,7 +291,7 @@ RSpec.describe "bundle install with gem sources" do
       end
 
       it "works" do
-        bundle "config --local path vendor"
+        bundle "config set --local path vendor"
         bundle "install"
         expect(the_bundle).to include_gems "rack 1.0"
       end
@@ -294,8 +312,11 @@ RSpec.describe "bundle install with gem sources" do
     end
 
     it "finds gems in multiple sources", :bundler => "< 3" do
-      build_repo2
-      update_repo2
+      build_repo2 do
+        build_gem "rack", "1.2" do |s|
+          s.executables = "rackup"
+        end
+      end
 
       install_gemfile <<-G
         source "#{file_uri_for(gem_repo1)}"
@@ -511,7 +532,7 @@ RSpec.describe "bundle install with gem sources" do
   end
 
   describe "when Bundler root contains regex chars" do
-    it "doesn't blow up" do
+    it "doesn't blow up when using the `gem` DSL" do
       root_dir = tmp("foo[]bar")
 
       FileUtils.mkdir_p(root_dir)
@@ -519,6 +540,22 @@ RSpec.describe "bundle install with gem sources" do
       build_lib "foo"
       gemfile = <<-G
         gem 'foo', :path => "#{lib_path("foo-1.0")}"
+      G
+      File.open("#{root_dir}/Gemfile", "w") do |file|
+        file.puts gemfile
+      end
+
+      bundle :install, :dir => root_dir
+    end
+
+    it "doesn't blow up when using the `gemspec` DSL" do
+      root_dir = tmp("foo[]bar")
+
+      FileUtils.mkdir_p(root_dir)
+
+      build_lib "foo", :path => root_dir
+      gemfile = <<-G
+        gemspec
       G
       File.open("#{root_dir}/Gemfile", "w") do |file|
         file.puts gemfile
@@ -554,7 +591,7 @@ RSpec.describe "bundle install with gem sources" do
     it "should display a proper message to explain the problem" do
       FileUtils.chmod(0o500, bundled_app("vendor"))
 
-      bundle "config --local path vendor"
+      bundle "config set --local path vendor"
       bundle :install, :raise_on_error => false
       expect(err).to include(bundled_app("vendor").to_s)
       expect(err).to include("grant write permissions")
@@ -567,7 +604,7 @@ RSpec.describe "bundle install with gem sources" do
         source "#{file_uri_for(gem_repo1)}"
         gem "rack"
       G
-      bundle "config --local path bundle"
+      bundle "config set --local path bundle"
       bundle "install", :standalone => true
     end
 

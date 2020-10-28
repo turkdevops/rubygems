@@ -35,6 +35,7 @@ class Gem::Source
     end
 
     @uri = uri
+    @update_cache = nil
   end
 
   ##
@@ -114,7 +115,8 @@ class Gem::Source
   # Returns true when it is possible and safe to update the cache directory.
 
   def update_cache?
-    @update_cache ||=
+    return @update_cache unless @update_cache.nil?
+    @update_cache =
       begin
         File.stat(Gem.user_home).uid == Process.uid
       rescue Errno::ENOENT
@@ -223,7 +225,7 @@ class Gem::Source
 
   def typo_squatting?(host, distance_threshold=4)
     return if @uri.host.nil?
-    levenshtein_distance(@uri.host, host) <= distance_threshold
+    levenshtein_distance(@uri.host, host).between? 1, distance_threshold
   end
 end
 

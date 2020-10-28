@@ -3,7 +3,7 @@ require 'rubygems/test_case'
 require 'net/http'
 require 'rubygems/openssl'
 
-unless defined?(OpenSSL::SSL)
+unless Gem::HAVE_OPENSSL
   warn 'Skipping bundled certificates tests.  openssl not found.'
 end
 
@@ -15,15 +15,10 @@ require 'rubygems/request'
 #
 
 class TestBundledCA < Gem::TestCase
-  THIS_FILE = File.expand_path __FILE__
-
   def bundled_certificate_store
     store = OpenSSL::X509::Store.new
 
-    ssl_cert_glob =
-      File.expand_path '../../../lib/rubygems/ssl_certs/*/*.pem', THIS_FILE
-
-    Dir[ssl_cert_glob].each do |ssl_cert|
+    Gem::Request.get_cert_files.each do |ssl_cert|
       store.add_file ssl_cert
     end
 
@@ -58,4 +53,4 @@ class TestBundledCA < Gem::TestCase
   def test_accessing_new_index
     assert_https('fastly.rubygems.org')
   end
-end if defined?(OpenSSL::SSL)
+end if Gem::HAVE_OPENSSL

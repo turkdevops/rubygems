@@ -227,6 +227,10 @@ module Bundler
       Gem.load_plugin_files(files) if Gem.respond_to?(:load_plugin_files)
     end
 
+    def load_env_plugins
+      Gem.load_env_plugins if Gem.respond_to?(:load_env_plugins)
+    end
+
     def ui=(obj)
       Gem::DefaultUserInteraction.ui = obj
     end
@@ -411,6 +415,17 @@ module Bundler
     # Replace or hook into RubyGems to provide a bundlerized view
     # of the world.
     def replace_entrypoints(specs)
+      specs_by_name = add_default_gems_to(specs)
+
+      replace_gem(specs, specs_by_name)
+      stub_rubygems(specs)
+      replace_bin_path(specs_by_name)
+
+      Gem.clear_paths
+    end
+
+    # Add default gems not already present in specs, and return them as a hash.
+    def add_default_gems_to(specs)
       specs_by_name = specs.reduce({}) do |h, s|
         h[s.name] = s
         h
@@ -425,11 +440,7 @@ module Bundler
         specs_by_name[default_spec_name] = default_spec
       end
 
-      replace_gem(specs, specs_by_name)
-      stub_rubygems(specs)
-      replace_bin_path(specs_by_name)
-
-      Gem.clear_paths
+      specs_by_name
     end
 
     def undo_replacements

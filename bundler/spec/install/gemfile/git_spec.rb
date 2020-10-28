@@ -124,7 +124,7 @@ RSpec.describe "bundle install with git sources" do
     end
 
     it "still works after moving the application directory" do
-      bundle "config --local path vendor/bundle"
+      bundle "config set --local path vendor/bundle"
       bundle "install"
 
       FileUtils.mv bundled_app, tmp("bundled_app.bck")
@@ -133,7 +133,7 @@ RSpec.describe "bundle install with git sources" do
     end
 
     it "can still install after moving the application directory" do
-      bundle "config --local path vendor/bundle"
+      bundle "config set --local path vendor/bundle"
       bundle "install"
 
       FileUtils.mv bundled_app, tmp("bundled_app.bck")
@@ -864,6 +864,24 @@ RSpec.describe "bundle install with git sources" do
     expect(the_bundle).to include_gems "has_submodule 1.0"
   end
 
+  it "does not warn when deiniting submodules" do
+    build_git "submodule", "1.0"
+    build_git "has_submodule", "1.0"
+
+    sys_exec "git submodule add #{lib_path("submodule-1.0")} submodule-1.0", :dir => lib_path("has_submodule-1.0")
+    sys_exec "git commit -m \"submodulator\"", :dir => lib_path("has_submodule-1.0")
+
+    install_gemfile <<-G
+      git "#{lib_path("has_submodule-1.0")}" do
+        gem "has_submodule"
+      end
+    G
+    expect(err).to be_empty
+
+    expect(the_bundle).to include_gems "has_submodule 1.0"
+    expect(the_bundle).to_not include_gems "submodule 1.0"
+  end
+
   it "handles implicit updates when modifying the source info" do
     git = build_git "foo"
 
@@ -1044,7 +1062,7 @@ RSpec.describe "bundle install with git sources" do
 
       simulate_new_machine
 
-      bundle "config --local deployment true"
+      bundle "config set --local deployment true"
       bundle :install
     end
   end

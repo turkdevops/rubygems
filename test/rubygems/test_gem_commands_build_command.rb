@@ -148,7 +148,7 @@ class TestGemCommandsBuildCommand < Gem::TestCase
   end
 
   def test_execute_rubyforge_project_warning
-    rubyforge_gemspec = File.join SPECIFICATIONS, "rubyforge-0.0.1.gemspec"
+    rubyforge_gemspec = File.expand_path File.join("specifications", "rubyforge-0.0.1.gemspec"), __dir__
 
     @cmd.options[:args] = [rubyforge_gemspec]
 
@@ -273,7 +273,7 @@ class TestGemCommandsBuildCommand < Gem::TestCase
   end
 
   def test_can_find_gemspecs_without_dot_gemspec
-    gemspec_file = File.join(@tempdir, @gem.spec_name)
+    gemspec_file = File.join(@tempdir, @gem.name)
 
     File.open gemspec_file + ".gemspec", 'w' do |gs|
       gs.write @gem.to_ruby
@@ -390,7 +390,7 @@ class TestGemCommandsBuildCommand < Gem::TestCase
   end
 
   def test_build_signed_gem
-    skip 'openssl is missing' unless defined?(OpenSSL::SSL) && !java_platform?
+    skip 'openssl is missing' unless Gem::HAVE_OPENSSL && !java_platform?
 
     trust_dir = Gem::Security.trust_dir
 
@@ -417,7 +417,7 @@ class TestGemCommandsBuildCommand < Gem::TestCase
   end
 
   def test_build_signed_gem_with_cert_expiration_length_days
-    skip 'openssl is missing' unless defined?(OpenSSL::SSL) && !java_platform?
+    skip 'openssl is missing' unless Gem::HAVE_OPENSSL && !java_platform?
 
     gem_path = File.join Gem.user_home, ".gem"
     Dir.mkdir gem_path
@@ -461,7 +461,7 @@ class TestGemCommandsBuildCommand < Gem::TestCase
   end
 
   def test_build_auto_resign_cert
-    skip 'openssl is missing' unless defined?(OpenSSL::SSL) && !java_platform?
+    skip 'openssl is missing' unless Gem::HAVE_OPENSSL && !java_platform?
 
     gem_path = File.join Gem.user_home, ".gem"
     Dir.mkdir gem_path

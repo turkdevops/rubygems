@@ -134,7 +134,8 @@ module Bundler
         if Bundler.which("man") && man_path !~ %r{^file:/.+!/META-INF/jruby.home/.+}
           Kernel.exec "man #{man_page}"
         else
-          puts File.read("#{File.dirname(man_page)}/#{File.basename(man_page)}.ronn")
+          fallback_man_path = File.expand_path("../man", __FILE__)
+          puts File.read("#{fallback_man_path}/#{File.basename(man_page)}.ronn")
         end
       elsif command_path = Bundler.which("bundler-#{cli}")
         Kernel.exec(command_path, "--help")
@@ -437,6 +438,14 @@ module Bundler
     def outdated(*gems)
       require_relative "cli/outdated"
       Outdated.new(options, gems).run
+    end
+
+    desc "fund [OPTIONS]", "Lists information about gems seeking funding assistance"
+    method_option "group", :aliases => "-g", :type => :array, :banner =>
+      "Fetch funding information for a specific group"
+    def fund
+      require_relative "cli/fund"
+      Fund.new(options).run
     end
 
     desc "cache [OPTIONS]", "Locks and then caches all of the gems into vendor/cache"
