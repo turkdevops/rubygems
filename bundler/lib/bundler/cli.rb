@@ -57,7 +57,7 @@ module Bundler
       custom_gemfile = options[:gemfile] || Bundler.settings[:gemfile]
       if custom_gemfile && !custom_gemfile.empty?
         Bundler::SharedHelpers.set_env "BUNDLE_GEMFILE", File.expand_path(custom_gemfile)
-        Bundler.reset_paths!
+        Bundler.reset_settings!
       end
 
       Bundler.settings.set_command_option_if_given :retry, options[:retry]
@@ -381,6 +381,8 @@ module Bundler
       "Make binstubs that can work without the Bundler runtime"
     method_option "all", :type => :boolean, :banner =>
       "Install binstubs for all gems"
+    method_option "all-platforms", :type => :boolean, :default => false, :banner =>
+      "Install binstubs for all platforms"
     def binstubs(*gems)
       require_relative "cli/binstubs"
       Binstubs.new(options, gems).run

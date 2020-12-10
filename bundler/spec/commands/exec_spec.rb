@@ -698,15 +698,23 @@ RSpec.describe "bundle exec" do
       let(:exit_code) { 1 }
       let(:expected_err) do
         "bundler: failed to load command: #{path} (#{path})" \
-        "\nRuntimeError: ERROR\n  #{path}:10:in `<top (required)>'"
+        "\n#{path}:10:in `<top (required)>': ERROR (RuntimeError)"
       end
-      it_behaves_like "it runs"
+
+      it "runs like a normally executed executable" do
+        skip "https://github.com/rubygems/rubygems/issues/3351" if Gem.win_platform?
+
+        subject
+        expect(exitstatus).to eq(exit_code)
+        expect(err).to start_with(expected_err)
+        expect(out).to eq(expected)
+      end
     end
 
     context "the executable raises an error without a backtrace" do
       let(:executable) { super() << "\nclass Err < Exception\ndef backtrace; end;\nend\nraise Err" }
       let(:exit_code) { 1 }
-      let(:expected_err) { "bundler: failed to load command: #{path} (#{path})\nErr: Err" }
+      let(:expected_err) { "bundler: failed to load command: #{path} (#{path})\n#{system_gem_path("bin/bundle")}: Err (Err)" }
       let(:expected) { super() }
 
       it_behaves_like "it runs"
@@ -747,7 +755,7 @@ RSpec.describe "bundle exec" do
       let(:expected) { "" }
       let(:expected_err) { <<-EOS.strip }
 \e[31mCould not find gem 'rack (= 2)' in locally installed gems.
-The source contains 'rack' at: 1.0.0\e[0m
+The source contains the following versions of 'rack': 1.0.0\e[0m
 \e[33mRun `bundle install` to install missing gems.\e[0m
       EOS
 
@@ -865,6 +873,8 @@ __FILE__: #{path.to_s.inspect}
   context "nested bundle exec" do
     context "when bundle in a local path" do
       before do
+        skip "https://github.com/rubygems/rubygems/issues/3351" if Gem.win_platform?
+
         gemfile <<-G
           source "#{file_uri_for(gem_repo1)}"
           gem "rack"
@@ -874,8 +884,6 @@ __FILE__: #{path.to_s.inspect}
       end
 
       it "correctly shells out" do
-        skip "https://github.com/rubygems/rubygems/issues/3351" if Gem.win_platform?
-
         file = bundled_app("file_that_bundle_execs.rb")
         create_file(file, <<-RUBY)
           #!#{Gem.ruby}
@@ -884,6 +892,49 @@ __FILE__: #{path.to_s.inspect}
         file.chmod(0o777)
         bundle "exec #{file}", :env => { "PATH" => path }
         expect(out).to eq("foo")
+      end
+    end
+
+    context "when Kernel.require uses extra monkeypatches" do
+      before do
+        skip "https://github.com/rubygems/rubygems/issues/3351" if Gem.win_platform?
+
+        install_gemfile ""
+      end
+
+      it "does not undo the monkeypatches" do
+        karafka = bundled_app("bin/karafka")
+        create_file(karafka, <<~RUBY)
+          #!#{Gem.ruby}
+
+          module Kernel
+            module_function
+
+            alias_method :require_before_extra_monkeypatches, :require
+
+            def require(path)
+              puts "requiring \#{path} used the monkeypatch"
+
+              require_before_extra_monkeypatches(path)
+            end
+          end
+
+          Bundler.setup(:default)
+
+          require "foo"
+        RUBY
+        karafka.chmod(0o777)
+
+        foreman = bundled_app("bin/foreman")
+        create_file(foreman, <<~RUBY)
+          #!#{Gem.ruby}
+
+          puts `bundle exec bin/karafka`
+        RUBY
+        foreman.chmod(0o777)
+
+        bundle "exec #{foreman}"
+        expect(out).to eq("requiring foo used the monkeypatch")
       end
     end
 
