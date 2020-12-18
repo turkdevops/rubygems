@@ -18,7 +18,7 @@ class Release
   module SubRelease
     include GithubAPI
 
-    attr_reader :version, :changelog, :version_files, :title, :tag_prefix
+    attr_reader :version, :changelog, :version_files, :name, :tag_prefix
 
     def cut_changelog_for!(pull_requests)
       set_relevant_pull_requests_from(pull_requests)
@@ -30,12 +30,23 @@ class Release
       @changelog.cut!(previous_version, relevant_pull_requests)
     end
 
+    def bump_versions!
+      version_files.each do |version_file|
+        version_contents = File.read(version_file)
+        unless version_contents.sub!(/^(.*VERSION = )"#{Gem::Version::VERSION_PATTERN}"/i, "\\1#{version.to_s.dump}")
+          raise "Failed to update #{version_file}, is it in the expected format?"
+        end
+        File.open(version_file, "w") {|f| f.write(version_contents) }
+      end
+    end
+
     def create_for_github!
       tag = "#{@tag_prefix}#{@version}"
 
       gh_client.create_release "rubygems/rubygems", tag, :name => tag,
                                                          :body => @changelog.release_notes.join("\n").strip,
-                                                         :prerelease => @version.prerelease?
+                                                         :prerelease => @version.prerelease?,
+                                                         :target_commitish => @stable_branch
     end
 
     def previous_version
@@ -56,11 +67,12 @@ class Release
   class Bundler
     include SubRelease
 
-    def initialize(version)
-      @version = version
+    def initialize(version, stable_branch)
+      @version = Gem::Version.new(version)
+      @stable_branch = stable_branch
       @changelog = Changelog.for_bundler(version)
       @version_files = [File.expand_path("../bundler/lib/bundler/version.rb", __dir__)]
-      @title = "Bundler version #{version} with changelog"
+      @name = "Bundler"
       @tag_prefix = "bundler-v"
     end
   end
@@ -68,11 +80,12 @@ class Release
   class Rubygems
     include SubRelease
 
-    def initialize(version)
-      @version = version
+    def initialize(version, stable_branch)
+      @version = Gem::Version.new(version)
+      @stable_branch = stable_branch
       @changelog = Changelog.for_rubygems(version)
       @version_files = [File.expand_path("../lib/rubygems.rb", __dir__), File.expand_path("../rubygems-update.gemspec", __dir__)]
-      @title = "Rubygems version #{version} with changelog"
+      @name = "Rubygems"
       @tag_prefix = "v"
     end
   end
@@ -99,13 +112,14 @@ class Release
   def initialize(version)
     segments = Gem::Version.new(version).segments
 
+    @stable_branch = segments[0, 2].join(".")
+
     rubygems_version = segments.join(".")
-    @rubygems = Rubygems.new(rubygems_version)
+    @rubygems = Rubygems.new(rubygems_version, @stable_branch)
 
     bundler_version = segments.map.with_index {|s, i| i == 0 ? s - 1 : s }.join(".")
-    @bundler = Bundler.new(bundler_version)
+    @bundler = Bundler.new(bundler_version, @stable_branch)
 
-    @stable_branch = segments[0, 2].join(".")
     @release_branch = "release/bundler_#{bundler_version}_rubygems_#{rubygems_version}"
   end
 
@@ -146,17 +160,11 @@ class Release
       end
 
       [@bundler, @rubygems].each do |library|
-        library.version_files.each do |version_file|
-          version_contents = File.read(version_file)
-          unless version_contents.sub!(/^(.*VERSION = )"#{Gem::Version::VERSION_PATTERN}"/i, "\\1#{library.version.to_s.dump}")
-            raise "Failed to update #{version_file}, is it in the expected format?"
-          end
-          File.open(version_file, "w") {|f| f.write(version_contents) }
-        end
-
         library.cut_changelog!
+        system("git", "commit", "-am", "Changelog for #{library.name} version #{library.version}", exception: true)
 
-        system("git", "commit", "-am", library.title, exception: true)
+        library.bump_versions!
+        system("git", "commit", "-am", "Bump #{library.name} version to #{library.version}", exception: true)
       end
     rescue StandardError
       system("git", "checkout", initial_branch, exception: true)
@@ -167,6 +175,10 @@ class Release
 
   def cut_changelog!
     @current_library.cut_changelog_for!(unreleased_pull_requests)
+  end
+
+  def create_for_github!
+    @current_library.create_for_github!
   end
 
   private
