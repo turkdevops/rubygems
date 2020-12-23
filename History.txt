@@ -1,3 +1,27 @@
+=== 3.2.3 / 2020-12-22
+
+Enhancements:
+
+* Fix misspellings in default API key name. Pull request #4177 by hsbt
+
+Bug fixes:
+
+* Respect `required_ruby_version` and `required_rubygems_version`
+  constraints when looking for `gem install` candidates. Pull request #4110
+  by deivid-rodriguez
+
+=== 3.2.2 / 2020-12-17
+
+Bug fixes:
+
+* Fix issue where CLI commands making more than one request to
+  rubygems.org needing an OTP code would crash or ask for the code twice.
+  Pull request #4162 by sonalkr132
+* Fix building rake extensions that require openssl. Pull request #4165 by
+  deivid-rodriguez
+* Fix `gem update --system` displaying too many changelog entries. Pull
+  request #4145 by deivid-rodriguez
+
 === 3.2.1 / 2020-12-14
 
 Enhancements:
