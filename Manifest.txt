@@ -189,6 +189,7 @@ bundler/lib/bundler/templates/Executable.bundler
 bundler/lib/bundler/templates/Executable.standalone
 bundler/lib/bundler/templates/Gemfile
 bundler/lib/bundler/templates/gems.rb
+bundler/lib/bundler/templates/newgem/CHANGELOG.md.tt
 bundler/lib/bundler/templates/newgem/CODE_OF_CONDUCT.md.tt
 bundler/lib/bundler/templates/newgem/Gemfile.tt
 bundler/lib/bundler/templates/newgem/LICENSE.txt.tt
@@ -211,6 +212,7 @@ bundler/lib/bundler/templates/newgem/rspec.tt
 bundler/lib/bundler/templates/newgem/rubocop.yml.tt
 bundler/lib/bundler/templates/newgem/spec/newgem_spec.rb.tt
 bundler/lib/bundler/templates/newgem/spec/spec_helper.rb.tt
+bundler/lib/bundler/templates/newgem/standard.yml.tt
 bundler/lib/bundler/templates/newgem/test/minitest/test_helper.rb.tt
 bundler/lib/bundler/templates/newgem/test/minitest/test_newgem.rb.tt
 bundler/lib/bundler/templates/newgem/test/test-unit/newgem_test.rb.tt
@@ -353,6 +355,7 @@ lib/rubygems/config_file.rb
 lib/rubygems/core_ext/kernel_gem.rb
 lib/rubygems/core_ext/kernel_require.rb
 lib/rubygems/core_ext/kernel_warn.rb
+lib/rubygems/core_ext/tcpsocket_init.rb
 lib/rubygems/defaults.rb
 lib/rubygems/dependency.rb
 lib/rubygems/dependency_installer.rb
@@ -512,6 +515,7 @@ test/rubygems/child_key.pem
 test/rubygems/client.pem
 test/rubygems/data/gem-private_key.pem
 test/rubygems/data/gem-public_cert.pem
+test/rubygems/data/null-required-ruby-version.gemspec.rz
 test/rubygems/data/null-required-rubygems-version.gemspec.rz
 test/rubygems/data/null-type.gemspec.rz
 test/rubygems/encrypted_private_key.pem
@@ -533,6 +537,7 @@ test/rubygems/invalid_signer_cert_32.pem
 test/rubygems/invalidchild_cert.pem
 test/rubygems/invalidchild_cert_32.pem
 test/rubygems/invalidchild_key.pem
+test/rubygems/packages/ascii_binder-0.1.10.1.gem
 test/rubygems/plugin/exception/rubygems_plugin.rb
 test/rubygems/plugin/load/rubygems_plugin.rb
 test/rubygems/plugin/standarderror/rubygems_plugin.rb

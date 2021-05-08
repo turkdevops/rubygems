@@ -1,3 +1,126 @@
+# 3.2.17 / 2021-05-05
+
+## Enhancements:
+
+* Only print month & year in deprecation messages. Pull request #3085 by
+  Schwad
+* Make deprecate method support ruby3's keyword arguments. Pull request
+  #4558 by mame
+* Update the default bindir on macOS. Pull request #4524 by nobu
+* Prefer File.open instead of Kernel#open. Pull request #4529 by mame
+
+## Documentation:
+
+* Fix usage messages to reflect the current POSIX-compatible behaviour.
+  Pull request #4551 by graywolf-at-work
+
+# 3.2.16 / 2021-04-08
+
+## Bug fixes:
+
+* Correctly handle symlinks. Pull request #2836 by voxik
+
+# 3.2.15 / 2021-03-19
+
+## Enhancements:
+
+* Prevent downgrades to untested rubygems versions. Pull request #4460 by
+  deivid-rodriguez
+
+## Bug fixes:
+
+* Fix missing require breaking `gem cert`. Pull request #4464 by lukehinds
+
+# 3.2.14 / 2021-03-08
+
+## Enhancements:
+
+* Less wrapping of network errors. Pull request #4064 by deivid-rodriguez
+
+## Bug fixes:
+
+* Revert addition of support for `musl` variants to restore graceful
+  fallback on Alpine. Pull request #4434 by deivid-rodriguez
+
+# 3.2.13 / 2021-03-03
+
+## Bug fixes:
+
+* Support non-gnu libc linux platforms. Pull request #4082 by lloeki
+
+# 3.2.12 / 2021-03-01
+
+## Bug fixes:
+
+* Restore the ability to manually install extension gems. Pull request
+  #4384 by cfis
+
+# 3.2.11 / 2021-02-17
+
+## Enhancements:
+
+* Optionally fallback to IPv4 when IPv6 is unreachable. Pull request #2662
+  by sonalkr132
+
+# 3.2.10 / 2021-02-15
+
+## Documentation:
+
+* Add a `gem push` example to `gem help`. Pull request #4373 by
+  deivid-rodriguez
+* Improve documentation for `required_ruby_version`. Pull request #4343 by
+  AlexWayfer
+
+# 3.2.9 / 2021-02-08
+
+## Bug fixes:
+
+* Fix error message when underscore selection can't find bundler. Pull
+  request #4363 by deivid-rodriguez
+* Fix `Gem::Specification.stubs_for` returning wrong named specs. Pull
+  request #4356 by tompng
+* Don't error out when activating a binstub unless necessary. Pull request
+  #4351 by deivid-rodriguez
+* Fix `gem outdated` incorrectly handling platform specific gems. Pull
+  request #4248 by deivid-rodriguez
+
+# 3.2.8 / 2021-02-02
+
+## Bug fixes:
+
+* Fix `gem install` crashing on gemspec with nil required_ruby_version.
+  Pull request #4334 by pbernays
+
+# 3.2.7 / 2021-01-26
+
+## Bug fixes:
+
+* Generate plugin wrappers with relative requires. Pull request #4317 by
+  deivid-rodriguez
+
+# 3.2.6 / 2021-01-18
+
+## Enhancements:
+
+* Fix `Gem::Platform#inspect` showing duplicate information. Pull request
+  #4276 by deivid-rodriguez
+
+## Bug fixes:
+
+* Swallow any system call error in `ensure_gem_subdirs` to support jruby
+  embedded paths. Pull request #4291 by kares
+* Restore accepting custom make command with extra options as the `make`
+  env variable. Pull request #4271 by terceiro
+
+# 3.2.5 / 2021-01-11
+
+## Bug fixes:
+
+* Don't load more specs after the whole set of specs has been setup. Pull
+  request #4262 by deivid-rodriguez
+* Fix broken `bundler` executable after `gem update --system`. Pull
+  request #4221 by deivid-rodriguez
+
 # 3.2.4 / 2020-12-31
 
 ## Enhancements:
@@ -616,7 +739,7 @@
 * Clean which command. Pull request #2801 by Luis Sagastume.
 * Upgrading S3 source signature to AWS SigV4. Pull request #2807 by
   Alexander Pakulov.
-* Remove missleading comment, no reason to move Gem.host to Gem::Util.
+* Remove misleading comment, no reason to move Gem.host to Gem::Util.
   Pull request #2811 by Luis Sagastume.
 * Drop support for 'gem env packageversion'. Pull request #2813 by Luis
   Sagastume.
@@ -1616,7 +1739,7 @@ Security fixes:
 * Clean up the PathSupport object. Pull request #1094 by Aaron Patterson.
 * Join with File::PATH_SEPARATOR in Gem.use_paths. Pull request #1476 by
   Samuel E. Giddins.
-* Handle when the gem home and gem path arent set in the config file. Pull
+* Handle when the gem home and gem path aren't set in the config file. Pull
   request #1478 by Samuel E. Giddins.
 * Terminate TimeoutHandler. Pull request #1479 by Nobuyoshi Nakada.
 * Remove redundant cache. Pull request #1482 by Eileen M. Uchitelle.
@@ -1961,7 +2084,7 @@ This release was sponsored by Ruby Central.
 * Fixed activating gems from a Gemfile for default gems.  Issue #991 by khoan.
 * Fixed windows stub script generation for Cygwin.  Issue #1000 by Brett
   DiFrischia.
-* Allow gem bindir and ruby.exe to live in separate diretories.  Pull request
+* Allow gem bindir and ruby.exe to live in separate directories.  Pull request
   #942 by Ian Flynn.
 * Fixed handling of gemspec in gem dependencies files to match Bundler
   behavior.  Issue #1020 by Michal Papis.
@@ -2055,7 +2178,7 @@ This release was sponsored by Ruby Central.
 * Gem.use_gemdeps now accepts an argument specifying the path of the gem
   dependencies file.  When the file is not found an ArgumentError is raised.
 * Writing a .lock file for a gem dependencies file is now controlled by the
-  --[no-]lock option.  Pull reuqest #774 by Jeremy Evans.
+  --[no-]lock option.  Pull request #774 by Jeremy Evans.
 * Suggestion of alternate names and spelling corrections during install can be
   suppressed with the --no-suggestions option.  Issue #867 by Jimmy Cuadra.
 * Added mswin64 support.  Pull request #881 by U. Nakamura.
@@ -2154,7 +2277,7 @@ This release was sponsored by Ruby Central.
 * Check for nil extensions as BasicSpecification does not initialize them.
   Pull request #882 by André Arko.
 * Fixed Gem::BasicSpecification#require_paths receives a String for
-  @require_paths. Pull requrest #904 by @danielpclark
+  @require_paths. Pull request #904 by @danielpclark
 * Fixed circular require warnings.  Bug #908 by Zachary Scott.
 * Gem::Specification#require_paths can no longer accidentally be an Array.
   Pull requests #904, #909 by Daniel P. Clark.
@@ -3590,7 +3713,7 @@ build arguments.
   * Fixed `gem contents` to work with the lightweight specifications
   * Fixed `gem update --system x.y.z` where x.y.z == latest version. (MGPalmer)
   * Fixed gem contents sorting and tests. (MGPalmer)
-  * Fixed intermittant problem in `gem fetch` with --platform specified (quix)
+  * Fixed intermittent problem in `gem fetch` with --platform specified (quix)
   * Fixed lightweight specifications so `gem rdoc` will generate proper
     documentation
   * MockGemUI#terminate_interaction should not raise Gem::SystemExitException.
@@ -4271,7 +4394,7 @@ For a full list of changes to RubyGems, see the git log.
   installation
 * Multi-version diamond dependencies only are installed once
 * Processing a YAML bulk index update takes less memory
-* `gem install -i` makes sure all depenencies are installed
+* `gem install -i` makes sure all dependencies are installed
 * `gem update --system` reinstalls into the prefix it was originally installed
   in
 * `gem update --system` respects --no-rdoc and --no-ri flags
@@ -4311,7 +4434,7 @@ Special thanks to:
 
 If you are experiencing problems with the source index (e.g. strange
 "No Method" errors), or problems with zlib (e.g. "Buffer Error"
-messsage), we recommend upgrading to RubyGems 0.9.4.
+message), we recommend upgrading to RubyGems 0.9.4.
 
 ## Bug fixes:
 

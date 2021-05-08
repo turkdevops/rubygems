@@ -148,11 +148,13 @@ namespace :man do
   end
 end
 
-load "task/automatiek.rake"
+load "../util/automatiek.rake"
 
+# We currently ship Molinillo master branch as of
+# https://github.com/CocoaPods/Molinillo/commit/7cc27a355e861bdf593e2cde7bf1bca3daae4303
 desc "Vendor a specific version of molinillo"
 Automatiek::RakeTask.new("molinillo") do |lib|
-  lib.version = "0.7.0"
+  lib.version = "master"
   lib.download = { :github => "https://github.com/CocoaPods/Molinillo" }
   lib.namespace = "Molinillo"
   lib.prefix = "Bundler"
@@ -161,7 +163,7 @@ end
 
 desc "Vendor a specific version of thor"
 Automatiek::RakeTask.new("thor") do |lib|
-  lib.version = "v1.0.1"
+  lib.version = "v1.1.0"
   lib.download = { :github => "https://github.com/erikhuda/thor" }
   lib.namespace = "Thor"
   lib.prefix = "Bundler"
@@ -169,7 +171,7 @@ Automatiek::RakeTask.new("thor") do |lib|
 end
 
 # We currently include the official version as of
-# https://github.com/ruby/tmpdir/tree/a3e06bd49829dc49c346aa10f8b91116fd7e17ad,
+# https://github.com/ruby/tmpdir/commit/c79bc7adf66a39617d0d6bae21085adc77c02b0e
 # with the following changes on top:
 # * require fileutils relatively to use our vendored version.
 # * Inherit from `Dir` so that code assuming we're inside the

@@ -18,11 +18,11 @@ jobs:
         ruby:
           - { name: "2.3", value: 2.3.8 }
           - { name: "2.4", value: 2.4.10 }
-          - { name: "2.5", value: 2.5.8 }
-          - { name: "2.6", value: 2.6.6 }
-          - { name: "2.7", value: 2.7.2 }
-          - { name: "3.0", value: 3.0.0 }
-          - { name: jruby-9.2, value: jruby-9.2.14.0 }
+          - { name: "2.5", value: 2.5.9 }
+          - { name: "2.6", value: 2.6.7 }
+          - { name: "2.7", value: 2.7.3 }
+          - { name: "3.0", value: 3.0.1 }
+          - { name: jruby-9.2, value: jruby-9.2.16.0 }
           - { name: truffleruby-20.3, value: truffleruby-20.3.0 }
         openssl:
           - { name: "openssl", value: true }
@@ -61,13 +61,13 @@ jobs:
         run: gem build bundler.gemspec
         working-directory: ./bundler
       - name: Install built bundler
-        run: gem install bundler-*.gem --verbose > output.txt
+        run: gem install bundler-*.gem --verbose --backtrace > output.txt
         working-directory: ./bundler
       - name: Check bundler install didn't hit the network
         run: if grep -q 'GET http' output.txt; then false; else true; fi
         working-directory: ./bundler
       - name: Check rails can be installed
-        run: gem install rails
+        run: gem install rails --verbose --backtrace
         if: matrix.ruby.name != 'truffleruby-20.3'
     timeout-minutes: 10
 
@@ -78,8 +78,8 @@ jobs:
       fail-fast: false
       matrix:
         ruby:
-          - { name: "3.0", value: 3.0.0 }
-          - { name: jruby-9.2, value: jruby-9.2.14.0 }
+          - { name: "3.0", value: 3.0.1 }
+          - { name: jruby-9.2, value: jruby-9.2.16.0 }
     steps:
       - uses: actions/checkout@v2
       - name: Setup ruby

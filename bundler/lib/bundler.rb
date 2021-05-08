@@ -197,7 +197,7 @@ module Bundler
 
     def frozen_bundle?
       frozen = settings[:deployment]
-      frozen ||= settings[:frozen] unless feature_flag.deployment_means_frozen?
+      frozen ||= settings[:frozen]
       frozen
     end
 
@@ -440,7 +440,7 @@ EOF
     end
 
     def local_platform
-      return Gem::Platform::RUBY if settings[:force_ruby_platform]
+      return Gem::Platform::RUBY if settings[:force_ruby_platform] || Gem.platforms == [Gem::Platform::RUBY]
       Gem::Platform.local
     end
 

@@ -666,6 +666,9 @@ class Gem::Specification < Gem::BasicSpecification
   #
   #  # Only prereleases or final releases after 2.6.0.preview2
   #  spec.required_ruby_version = '> 2.6.0.preview2'
+  #
+  #  # This gem will work with 2.3.0 or greater, including major version 3, but lesser than 4.0.0
+  #  spec.required_ruby_version = '>= 2.3', '< 4'
 
   def required_ruby_version=(req)
     @required_ruby_version = Gem::Requirement.create req
@@ -827,7 +830,9 @@ class Gem::Specification < Gem::BasicSpecification
     if @@stubs
       @@stubs_by_name[name] || []
     else
-      @@stubs_by_name[name] ||= stubs_for_pattern("#{name}-*.gemspec")
+      @@stubs_by_name[name] ||= stubs_for_pattern("#{name}-*.gemspec").select do |s|
+        s.name == name
+      end
     end
   end
 
@@ -848,7 +853,9 @@ class Gem::Specification < Gem::BasicSpecification
     specs.sort! do |a, b|
       names = a.name <=> b.name
       next names if names.nonzero?
-      b.version <=> a.version
+      versions = b.version <=> a.version
+      next versions if versions.nonzero?
+      b.platform == Gem::Platform::RUBY ? -1 : 1
     end
   end
 
@@ -1084,20 +1091,15 @@ class Gem::Specification < Gem::BasicSpecification
   end
 
   def self._latest_specs(specs, prerelease = false) # :nodoc:
-    result = Hash.new {|h,k| h[k] = {} }
-    native = {}
+    result = {}
 
     specs.reverse_each do |spec|
       next if spec.version.prerelease? unless prerelease
 
-      native[spec.name] = spec.version if spec.platform == Gem::Platform::RUBY
-      result[spec.name][spec.platform] = spec
+      result[spec.name] = spec
     end
 
-    result.map(&:last).map(&:values).flatten.reject do |spec|
-      minimum = native[spec.name]
-      minimum && spec.version < minimum
-    end.sort_by{|tup| tup.name }
+    result.map(&:last).flatten.sort_by{|tup| tup.name }
   end
 
   ##
@@ -2550,7 +2552,7 @@ class Gem::Specification < Gem::BasicSpecification
     begin
       dependencies.each do |dep|
         next unless dep.runtime?
-        dep.to_specs.each do |dep_spec|
+        dep.matching_specs(true).each do |dep_spec|
           next if visited.has_key?(dep_spec)
           visited[dep_spec] = true
           trail.push(dep_spec)

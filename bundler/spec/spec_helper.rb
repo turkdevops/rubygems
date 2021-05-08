@@ -23,7 +23,6 @@ require_relative "support/indexes"
 require_relative "support/matchers"
 require_relative "support/permissions"
 require_relative "support/platforms"
-require_relative "support/sometimes"
 require_relative "support/sudo"
 
 $debug = false
@@ -67,16 +66,9 @@ RSpec.configure do |config|
     mocks.allow_message_expectations_on_nil = false
   end
 
-  config.around :each do |example|
-    if ENV["RUBY"]
-      orig_ruby = Gem.ruby
-      Gem.ruby = ENV["RUBY"]
-    end
-    example.run
-    Gem.ruby = orig_ruby if ENV["RUBY"]
-  end
-
   config.before :suite do
+    Gem.ruby = ENV["RUBY"] if ENV["RUBY"]
+
     require_relative "support/rubygems_ext"
     Spec::Rubygems.test_setup
     ENV["BUNDLE_SPEC_RUN"] = "true"
@@ -91,6 +83,8 @@ RSpec.configure do |config|
   end
 
   config.before :all do
+    check_test_gems!
+
     build_repo1
 
     reset_paths!
@@ -105,7 +99,7 @@ RSpec.configure do |config|
 
         all_output = all_commands_output
         if example.exception && !all_output.empty?
-          message = example.exception.message + all_output
+          message = all_output + "\n" + example.exception.message
           (class << example.exception; self; end).send(:define_method, :message) do
             message
           end

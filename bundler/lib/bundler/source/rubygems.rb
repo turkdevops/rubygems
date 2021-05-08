@@ -20,17 +20,29 @@ module Bundler
         @dependency_names = []
         @allow_remote = false
         @allow_cached = false
+        @allow_local = options["allow_local"] || false
         @caches = [cache_path, *Bundler.rubygems.gem_cache]
 
-        Array(options["remotes"] || []).reverse_each {|r| add_remote(r) }
+        Array(options["remotes"]).reverse_each {|r| add_remote(r) }
+      end
+
+      def local!
+        return if @allow_local
+
+        @specs = nil
+        @allow_local = true
       end
 
       def remote!
+        return if @allow_remote
+
         @specs = nil
         @allow_remote = true
       end
 
       def cached!
+        return if @allow_cached
+
         @specs = nil
         @allow_cached = true
       end
@@ -49,8 +61,12 @@ module Bundler
         o.is_a?(Rubygems) && (o.credless_remotes - credless_remotes).empty?
       end
 
+      def disable_multisource?
+        @remotes.size <= 1
+      end
+
       def can_lock?(spec)
-        return super if Bundler.feature_flag.disable_multisource?
+        return super if disable_multisource?
         spec.source.is_a?(Rubygems)
       end
 
@@ -87,7 +103,7 @@ module Bundler
           # small_idx.use large_idx.
           idx = @allow_remote ? remote_specs.dup : Index.new
           idx.use(cached_specs, :override_dupes) if @allow_cached || @allow_remote
-          idx.use(installed_specs, :override_dupes)
+          idx.use(installed_specs, :override_dupes) if @allow_local
           idx
         end
       end
@@ -353,7 +369,6 @@ module Bundler
       def installed_specs
         @installed_specs ||= Index.build do |idx|
           Bundler.rubygems.all_specs.reverse_each do |spec|
-            next if spec.name == "bundler"
             spec.source = self
             if Bundler.rubygems.spec_missing_extensions?(spec, false)
               Bundler.ui.debug "Source #{self} is ignoring #{spec} because it is missing extensions"
@@ -366,7 +381,7 @@ module Bundler
 
       def cached_specs
         @cached_specs ||= begin
-          idx = installed_specs.dup
+          idx = @allow_local ? installed_specs.dup : Index.new
 
           Dir["#{cache_path}/*.gem"].each do |gemfile|
             next if gemfile =~ /^bundler\-[\d\.]+?\.gem/
@@ -408,11 +423,11 @@ module Bundler
       def fetch_names(fetchers, dependency_names, index, override_dupes)
         fetchers.each do |f|
           if dependency_names
-            Bundler.ui.info "Fetching gem metadata from #{f.uri}", Bundler.ui.debug?
+            Bundler.ui.info "Fetching gem metadata from #{URICredentialsFilter.credential_filtered_uri(f.uri)}", Bundler.ui.debug?
             index.use f.specs_with_retry(dependency_names, self), override_dupes
             Bundler.ui.info "" unless Bundler.ui.debug? # new line now that the dots are over
           else
-            Bundler.ui.info "Fetching source index from #{f.uri}"
+            Bundler.ui.info "Fetching source index from #{URICredentialsFilter.credential_filtered_uri(f.uri)}"
             index.use f.specs_with_retry(nil, self), override_dupes
           end
         end

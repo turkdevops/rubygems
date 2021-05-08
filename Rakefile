@@ -7,12 +7,22 @@ require 'psych'
 
 desc "Setup Rubygems dev environment"
 task :setup do
-  sh "ruby", "bundler/bin/bundle", "install", "--gemfile=dev_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "install", "--gemfile=dev_gems.rb"
 end
 
 desc "Update Rubygems dev environment"
 task :update do |_, args|
-  sh "ruby", "bundler/bin/bundle", "update", *args, "--gemfile=dev_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", *args, "--gemfile=dev_gems.rb"
+end
+
+desc "Update the locked bundler version in dev environment"
+task :update_locked_bundler do |_, args|
+  sh "ruby", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=dev_gems.rb"
+  sh "ruby", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/test_gems.rb"
+  sh "ruby", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/rubocop_gems.rb"
+  sh "ruby", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/rubocop23_gems.rb"
+  sh "ruby", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/standard_gems.rb"
+  sh "ruby", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/standard23_gems.rb"
 end
 
 desc "Setup git hooks"
@@ -52,19 +62,19 @@ RDoc::Task.new :rdoc => 'docs', :clobber_rdoc => 'clobber_docs' do |doc|
   doc.rdoc_dir = 'doc'
 end
 
-begin
-  require "automatiek"
+# No big deal if Automatiek is not available. This might be just because
+# `rake` is executed from release tarball.
+if File.exist?("util/automatiek.rake")
+  load "util/automatiek.rake"
 
+  # We currently ship Molinillo master branch as of
+  # https://github.com/CocoaPods/Molinillo/commit/7cc27a355e861bdf593e2cde7bf1bca3daae4303
   Automatiek::RakeTask.new("molinillo") do |lib|
-    lib.version = "0.7.0"
+    lib.version = "master"
     lib.download = { :github => "https://github.com/CocoaPods/Molinillo" }
     lib.namespace = "Molinillo"
     lib.prefix = "Gem::Resolver"
     lib.vendor_lib = "lib/rubygems/resolver/molinillo"
-  end
-rescue LoadError
-  namespace :vendor do
-    task(:molinillo) { abort "Install the automatiek gem to be able to vendor gems." }
   end
 end
 
@@ -240,20 +250,17 @@ namespace 'guides' do
   desc 'Updates and publishes the guides for the just-released RubyGems'
   task 'publish'
 
-  on_master = `git branch --list master`.strip == '* master'
-  on_master = true if ENV['FORCE']
-
   task 'publish' => %w[
     guides:pull
     guides:update
     guides:commit
     guides:push
-  ] if on_master
+  ]
 end
 
 directory '../blog.rubygems.org' do
   sh 'git', 'clone',
-     'git@github.com:rubygems/rubygems.github.com.git',
+     'git@github.com:rubygems/rubygems.github.io.git',
      '../blog.rubygems.org'
 end
 
@@ -267,7 +274,7 @@ namespace 'blog' do
     Dir['pkg/*{tgz,zip,gem}'].map do |file|
       digest = Digest::SHA256.new
 
-      open file, 'rb' do |io|
+      File.open file, 'rb' do |io|
         while chunk = io.read(65536) do
           digest.update chunk
         end
