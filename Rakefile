@@ -77,6 +77,17 @@ if File.exist?("util/automatiek.rake")
     lib.namespace = "Molinillo"
     lib.prefix = "Gem::Resolver"
     lib.vendor_lib = "lib/rubygems/resolver/molinillo"
+    lib.license_path = "LICENSE"
+  end
+
+  desc "Vendor a specific version of tsort"
+  Automatiek::RakeTask.new("tsort") do |lib|
+    lib.version = "master"
+    lib.download = { :github => "https://github.com/ruby/tsort" }
+    lib.namespace = "TSort"
+    lib.prefix = "Gem"
+    lib.vendor_lib = "lib/rubygems/tsort"
+    lib.license_path = "LICENSE.txt"
   end
 end
 
@@ -214,7 +225,7 @@ task :upload => %w[upload_to_github upload_to_s3]
 
 directory '../guides.rubygems.org' do
   sh 'git', 'clone',
-     'git@github.com:rubygems/guides.git',
+     'https://github.com/rubygems/guides.git',
      '../guides.rubygems.org'
 end
 
@@ -264,7 +275,7 @@ end
 
 directory '../blog.rubygems.org' do
   sh 'git', 'clone',
-     'git@github.com:rubygems/rubygems.github.io.git',
+    'https://github.com/rubygems/rubygems.github.io.git',
      '../blog.rubygems.org'
 end
 

@@ -16,16 +16,6 @@ begin
 rescue Gem::LoadError
 end
 
-begin
-  require 'simplecov'
-  SimpleCov.start do
-    add_filter "/test/"
-    add_filter "/bundler/"
-    add_filter "/lib/rubygems/resolver/molinillo"
-  end
-rescue LoadError
-end
-
 if File.exist?(bundler_gemspec)
   require_relative '../../bundler/lib/bundler'
 else
@@ -1519,14 +1509,14 @@ Also, a list:
   end
 
   ##
-  # Loads an RSA private key named +key_name+ with +passphrase+ in <tt>test/rubygems/</tt>
+  # Loads a private key named +key_name+ with +passphrase+ in <tt>test/rubygems/</tt>
 
   def self.load_key(key_name, passphrase = nil)
     key_file = key_path key_name
 
     key = File.read key_file
 
-    OpenSSL::PKey::RSA.new key, passphrase
+    OpenSSL::PKey.read key, passphrase
   end
 
   ##

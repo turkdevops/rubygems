@@ -60,6 +60,7 @@ bundler/lib/bundler/dep_proxy.rb
 bundler/lib/bundler/dependency.rb
 bundler/lib/bundler/deployment.rb
 bundler/lib/bundler/deprecate.rb
+bundler/lib/bundler/digest.rb
 bundler/lib/bundler/dsl.rb
 bundler/lib/bundler/endpoint_specification.rb
 bundler/lib/bundler/env.rb
@@ -223,11 +224,14 @@ bundler/lib/bundler/ui/rg_proxy.rb
 bundler/lib/bundler/ui/shell.rb
 bundler/lib/bundler/ui/silent.rb
 bundler/lib/bundler/uri_credentials_filter.rb
+bundler/lib/bundler/vendor/connection_pool/LICENSE
 bundler/lib/bundler/vendor/connection_pool/lib/connection_pool.rb
 bundler/lib/bundler/vendor/connection_pool/lib/connection_pool/timed_stack.rb
 bundler/lib/bundler/vendor/connection_pool/lib/connection_pool/version.rb
 bundler/lib/bundler/vendor/connection_pool/lib/connection_pool/wrapper.rb
+bundler/lib/bundler/vendor/fileutils/LICENSE.txt
 bundler/lib/bundler/vendor/fileutils/lib/fileutils.rb
+bundler/lib/bundler/vendor/molinillo/LICENSE
 bundler/lib/bundler/vendor/molinillo/lib/molinillo.rb
 bundler/lib/bundler/vendor/molinillo/lib/molinillo/delegates/resolution_state.rb
 bundler/lib/bundler/vendor/molinillo/lib/molinillo/delegates/specification_provider.rb
@@ -248,10 +252,12 @@ bundler/lib/bundler/vendor/molinillo/lib/molinillo/modules/ui.rb
 bundler/lib/bundler/vendor/molinillo/lib/molinillo/resolution.rb
 bundler/lib/bundler/vendor/molinillo/lib/molinillo/resolver.rb
 bundler/lib/bundler/vendor/molinillo/lib/molinillo/state.rb
+bundler/lib/bundler/vendor/net-http-persistent/README.rdoc
 bundler/lib/bundler/vendor/net-http-persistent/lib/net/http/persistent.rb
 bundler/lib/bundler/vendor/net-http-persistent/lib/net/http/persistent/connection.rb
 bundler/lib/bundler/vendor/net-http-persistent/lib/net/http/persistent/pool.rb
 bundler/lib/bundler/vendor/net-http-persistent/lib/net/http/persistent/timed_stack_multi.rb
+bundler/lib/bundler/vendor/thor/LICENSE.md
 bundler/lib/bundler/vendor/thor/lib/thor.rb
 bundler/lib/bundler/vendor/thor/lib/thor/actions.rb
 bundler/lib/bundler/vendor/thor/lib/thor/actions/create_file.rb
@@ -284,6 +290,9 @@ bundler/lib/bundler/vendor/thor/lib/thor/shell/html.rb
 bundler/lib/bundler/vendor/thor/lib/thor/util.rb
 bundler/lib/bundler/vendor/thor/lib/thor/version.rb
 bundler/lib/bundler/vendor/tmpdir/lib/tmpdir.rb
+bundler/lib/bundler/vendor/tsort/LICENSE.txt
+bundler/lib/bundler/vendor/tsort/lib/tsort.rb
+bundler/lib/bundler/vendor/uri/LICENSE.txt
 bundler/lib/bundler/vendor/uri/lib/uri.rb
 bundler/lib/bundler/vendor/uri/lib/uri/common.rb
 bundler/lib/bundler/vendor/uri/lib/uri/file.rb
@@ -304,6 +313,7 @@ bundler/lib/bundler/vendored_molinillo.rb
 bundler/lib/bundler/vendored_persistent.rb
 bundler/lib/bundler/vendored_thor.rb
 bundler/lib/bundler/vendored_tmpdir.rb
+bundler/lib/bundler/vendored_tsort.rb
 bundler/lib/bundler/vendored_uri.rb
 bundler/lib/bundler/version.rb
 bundler/lib/bundler/version_ranges.rb
@@ -433,6 +443,7 @@ lib/rubygems/resolver/local_specification.rb
 lib/rubygems/resolver/lock_set.rb
 lib/rubygems/resolver/lock_specification.rb
 lib/rubygems/resolver/molinillo.rb
+lib/rubygems/resolver/molinillo/LICENSE
 lib/rubygems/resolver/molinillo/lib/molinillo.rb
 lib/rubygems/resolver/molinillo/lib/molinillo/delegates/resolution_state.rb
 lib/rubygems/resolver/molinillo/lib/molinillo/delegates/specification_provider.rb
@@ -469,7 +480,6 @@ lib/rubygems/security/policy.rb
 lib/rubygems/security/signer.rb
 lib/rubygems/security/trust_dir.rb
 lib/rubygems/security_option.rb
-lib/rubygems/server.rb
 lib/rubygems/source.rb
 lib/rubygems/source/git.rb
 lib/rubygems/source/installed.rb
@@ -486,6 +496,9 @@ lib/rubygems/ssl_certs/rubygems.org/GlobalSignRootCA.pem
 lib/rubygems/ssl_certs/rubygems.org/GlobalSignRootCA_R3.pem
 lib/rubygems/stub_specification.rb
 lib/rubygems/text.rb
+lib/rubygems/tsort.rb
+lib/rubygems/tsort/LICENSE.txt
+lib/rubygems/tsort/lib/tsort.rb
 lib/rubygems/uninstaller.rb
 lib/rubygems/unknown_command_spell_checker.rb
 lib/rubygems/uri.rb
@@ -541,6 +554,7 @@ test/rubygems/plugin/exception/rubygems_plugin.rb
 test/rubygems/plugin/load/rubygems_plugin.rb
 test/rubygems/plugin/standarderror/rubygems_plugin.rb
 test/rubygems/private3072_key.pem
+test/rubygems/private_ec_key.pem
 test/rubygems/private_key.pem
 test/rubygems/public3072_cert.pem
 test/rubygems/public_cert.pem
@@ -661,7 +675,6 @@ test/rubygems/test_gem_security.rb
 test/rubygems/test_gem_security_policy.rb
 test/rubygems/test_gem_security_signer.rb
 test/rubygems/test_gem_security_trust_dir.rb
-test/rubygems/test_gem_server.rb
 test/rubygems/test_gem_silent_ui.rb
 test/rubygems/test_gem_source.rb
 test/rubygems/test_gem_source_fetch_problem.rb
