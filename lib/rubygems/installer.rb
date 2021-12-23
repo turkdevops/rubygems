@@ -67,8 +67,6 @@ class Gem::Installer
 
   @path_warning = false
 
-  @install_lock = Thread::Mutex.new
-
   class << self
     #
     # Changes in rubygems to lazily loading `rubygems/command` (in order to
@@ -91,12 +89,6 @@ class Gem::Installer
     # True if we've warned about PATH not including Gem.bindir
 
     attr_accessor :path_warning
-
-    ##
-    # Certain aspects of the install process are not thread-safe. This lock is
-    # used to allow multiple threads to install Gems at the same time.
-
-    attr_reader :install_lock
 
     ##
     # Overrides the executable format.
@@ -301,8 +293,6 @@ class Gem::Installer
   def install
     pre_install_checks
 
-    FileUtils.rm_f File.join gem_home, 'specifications', spec.spec_name
-
     run_pre_install_hooks
 
     # Set loaded_from to ensure extension_dir is correct
@@ -342,7 +332,7 @@ class Gem::Installer
 
     say spec.post_install_message if options[:post_install_message] && !spec.post_install_message.nil?
 
-    Gem::Installer.install_lock.synchronize { Gem::Specification.reset }
+    Gem::Specification.reset
 
     run_post_install_hooks
 
@@ -456,13 +446,9 @@ class Gem::Installer
   # specifications directory.
 
   def write_spec
-    File.open spec_file, 'w' do |file|
-      spec.installed_by_version = Gem.rubygems_version
+    spec.installed_by_version = Gem.rubygems_version
 
-      file.puts spec.to_ruby_for_cache
-
-      file.fsync rescue nil # for filesystems without fsync(2)
-    end
+    Gem.write_binary(spec_file, spec.to_ruby_for_cache)
   end
 
   ##
@@ -470,9 +456,7 @@ class Gem::Installer
   # specifications/default directory.
 
   def write_default_spec
-    File.open(default_spec_file, "w") do |file|
-      file.puts spec.to_ruby
-    end
+    Gem.write_binary(default_spec_file, spec.to_ruby)
   end
 
   ##
@@ -527,7 +511,7 @@ class Gem::Installer
   end
 
   def generate_plugins # :nodoc:
-    latest = Gem::Installer.install_lock.synchronize { Gem::Specification.latest_spec_for(spec.name) }
+    latest = Gem::Specification.latest_spec_for(spec.name)
     return if latest && latest.version > spec.version
 
     ensure_writable_dir @plugins_dir
@@ -784,7 +768,7 @@ str = ARGV.first
 if str
   str = str.b[/\\A_(.*)_\\z/, 1]
   if str and Gem::Version.correct?(str)
-    version = str
+    #{explicit_version_requirement(spec.name)}
     ARGV.shift
   end
 end
@@ -804,6 +788,16 @@ TEXT
     <<-TEXT
 
 Gem.use_gemdeps
+TEXT
+  end
+
+  def explicit_version_requirement(name)
+    code = "version = str"
+    return code unless name == "bundler"
+
+    code += <<-TEXT
+
+    ENV['BUNDLER_VERSION'] = str
 TEXT
   end
 

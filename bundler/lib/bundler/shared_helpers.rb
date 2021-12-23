@@ -239,7 +239,7 @@ module Bundler
       current  = File.expand_path(SharedHelpers.pwd).tap{|x| x.untaint if RUBY_VERSION < "2.7" }
 
       until !File.directory?(current) || current == previous
-        if ENV["BUNDLE_SPEC_RUN"]
+        if ENV["BUNDLER_SPEC_RUN"]
           # avoid stepping above the tmp directory when testing
           gemspec = if ENV["GEM_COMMAND"]
             # for Ruby Core
@@ -313,12 +313,11 @@ module Bundler
     end
 
     def clean_load_path
-      bundler_lib = bundler_ruby_lib
-
       loaded_gem_paths = Bundler.rubygems.loaded_gem_paths
 
       $LOAD_PATH.reject! do |p|
-        next if resolve_path(p).start_with?(bundler_lib)
+        resolved_path = resolve_path(p)
+        next if $LOADED_FEATURES.any? {|lf| lf.start_with?(resolved_path) }
         loaded_gem_paths.delete(p)
       end
       $LOAD_PATH.uniq!

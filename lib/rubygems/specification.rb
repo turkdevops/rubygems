@@ -9,6 +9,8 @@
 require_relative 'deprecate'
 require_relative 'basic_specification'
 require_relative 'stub_specification'
+require_relative 'platform'
+require_relative 'requirement'
 require_relative 'specification_policy'
 require_relative 'util/list'
 
@@ -102,12 +104,8 @@ class Gem::Specification < Gem::BasicSpecification
   today = Time.now.utc
   TODAY = Time.utc(today.year, today.month, today.day) # :nodoc:
 
-  # rubocop:disable Style/MutableConstant
-  LOAD_CACHE = {} # :nodoc:
-  # rubocop:enable Style/MutableConstant
-  LOAD_CACHE_MUTEX = Thread::Mutex.new
-
-  private_constant :LOAD_CACHE if defined? private_constant
+  @load_cache = {} # :nodoc:
+  @load_cache_mutex = Thread::Mutex.new
 
   VALID_NAME_PATTERN = /\A[a-zA-Z0-9\.\-\_]+\z/.freeze # :nodoc:
 
@@ -182,13 +180,19 @@ class Gem::Specification < Gem::BasicSpecification
     @@default_value[k].nil?
   end
 
-  @@stubs = nil
-  @@stubs_by_name = {}
+  def self.clear_specs # :nodoc:
+    @@all = nil
+    @@stubs = nil
+    @@stubs_by_name = {}
+    @@spec_with_requirable_file = {}
+    @@active_stub_with_requirable_file = {}
+  end
+  private_class_method :clear_specs
+
+  clear_specs
 
   # Sentinel object to represent "not found" stubs
   NOT_FOUND = Struct.new(:to_spec, :this).new # :nodoc:
-  @@spec_with_requirable_file = {}
-  @@active_stub_with_requirable_file = {}
 
   # Tracking removed method calls to warn users during build time.
   REMOVED_METHODS = [:rubyforge_project=].freeze # :nodoc:
@@ -280,6 +284,15 @@ class Gem::Specification < Gem::BasicSpecification
 
   ######################################################################
   # :section: Recommended gemspec attributes
+
+  ##
+  # The version of Ruby required by this gem
+  #
+  # Usage:
+  #
+  #   spec.required_ruby_version = '>= 2.7.0'
+
+  attr_reader :required_ruby_version
 
   ##
   # A long description of this gem
@@ -517,11 +530,6 @@ class Gem::Specification < Gem::BasicSpecification
   end
 
   ##
-  # The version of Ruby required by this gem
-
-  attr_reader :required_ruby_version
-
-  ##
   # The RubyGems version required by this gem
 
   attr_reader :required_rubygems_version
@@ -748,23 +756,15 @@ class Gem::Specification < Gem::BasicSpecification
   attr_accessor :specification_version
 
   def self._all # :nodoc:
-    unless defined?(@@all) && @@all
-      @@all = stubs.map(&:to_spec)
-
-      # After a reset, make sure already loaded specs
-      # are still marked as activated.
-      specs = {}
-      Gem.loaded_specs.each_value{|s| specs[s] = true }
-      @@all.each{|s| s.activated = true if specs[s] }
-    end
-    @@all
+    @@all ||= Gem.loaded_specs.values | stubs.map(&:to_spec)
   end
 
-  def self._clear_load_cache # :nodoc:
-    LOAD_CACHE_MUTEX.synchronize do
-      LOAD_CACHE.clear
+  def self.clear_load_cache # :nodoc:
+    @load_cache_mutex.synchronize do
+      @load_cache.clear
     end
   end
+  private_class_method :clear_load_cache
 
   def self.each_gemspec(dirs) # :nodoc:
     dirs.each do |dir|
@@ -995,7 +995,6 @@ class Gem::Specification < Gem::BasicSpecification
   def self.find_by_path(path)
     path = path.dup.freeze
     spec = @@spec_with_requirable_file[path] ||= (stubs.find do |s|
-      next unless Gem::BundlerVersionFinder.compatible?(s)
       s.contains_requirable_file? path
     end || NOT_FOUND)
     spec.to_spec
@@ -1008,7 +1007,6 @@ class Gem::Specification < Gem::BasicSpecification
   def self.find_inactive_by_path(path)
     stub = stubs.find do |s|
       next if s.activated?
-      next unless Gem::BundlerVersionFinder.compatible?(s)
       s.contains_requirable_file? path
     end
     stub && stub.to_spec
@@ -1084,7 +1082,7 @@ class Gem::Specification < Gem::BasicSpecification
   # +prerelease+ is true.
 
   def self.latest_specs(prerelease = false)
-    _latest_specs Gem::Specification._all, prerelease
+    _latest_specs Gem::Specification.stubs, prerelease
   end
 
   ##
@@ -1112,13 +1110,13 @@ class Gem::Specification < Gem::BasicSpecification
   def self.load(file)
     return unless file
 
-    _spec = LOAD_CACHE_MUTEX.synchronize { LOAD_CACHE[file] }
+    _spec = @load_cache_mutex.synchronize { @load_cache[file] }
     return _spec if _spec
 
     file = file.dup.tap(&Gem::UNTAINT)
     return unless File.file?(file)
 
-    code = File.read file, :mode => 'r:UTF-8:-'
+    code = Gem.open_with_flock(file, 'r:UTF-8:-', &:read)
 
     code.tap(&Gem::UNTAINT)
 
@@ -1127,12 +1125,12 @@ class Gem::Specification < Gem::BasicSpecification
 
       if Gem::Specification === _spec
         _spec.loaded_from = File.expand_path file.to_s
-        LOAD_CACHE_MUTEX.synchronize do
-          prev = LOAD_CACHE[file]
+        @load_cache_mutex.synchronize do
+          prev = @load_cache[file]
           if prev
             _spec = prev
           else
-            LOAD_CACHE[file] = _spec
+            @load_cache[file] = _spec
           end
         end
         return _spec
@@ -1230,12 +1228,8 @@ class Gem::Specification < Gem::BasicSpecification
   def self.reset
     @@dirs = nil
     Gem.pre_reset_hooks.each {|hook| hook.call }
-    @@all = nil
-    @@stubs = nil
-    @@stubs_by_name = {}
-    @@spec_with_requirable_file = {}
-    @@active_stub_with_requirable_file = {}
-    _clear_load_cache
+    clear_specs
+    clear_load_cache
     unresolved = unresolved_deps
     unless unresolved.empty?
       w = "W" + "ARN"

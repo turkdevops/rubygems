@@ -56,13 +56,7 @@ class Changelog
     @version = Gem::Version.new(version)
     @file = File.expand_path(file)
     @config = YAML.load_file("#{File.dirname(file)}/.changelog.yml")
-    @level = if @version.segments[1..2] == [0, 0]
-               :major
-             elsif @version.segments[2] == 0
-               :minor
-             else
-               :patch
-             end
+    @level = @version.segments[2] != 0 ? :patch : :minor_or_major
   end
 
   def release_notes
@@ -169,10 +163,10 @@ class Changelog
     pull = entry.pull_request
 
     if pull
-      new_entry
-        .gsub!(/%pull_request_number/, pull.number.to_s)
-        .gsub!(/%pull_request_url/, pull.html_url)
-        .gsub!(/%pull_request_author/, pull.user.name || pull.user.login)
+      new_entry = new_entry
+        .gsub(/%pull_request_number/, pull.number.to_s)
+        .gsub(/%pull_request_url/, pull.html_url)
+        .gsub(/%pull_request_author/, pull.user.name || pull.user.login)
     end
 
     new_entry = wrap(new_entry, entry_wrapping, 2) if entry_wrapping
@@ -235,8 +229,6 @@ class Changelog
   def relevant_changelog_label_mapping
     if @level == :patch
       changelog_label_mapping.slice(*patch_level_labels)
-    elsif @level == :minor
-      changelog_label_mapping.slice(*patch_level_labels + minor_level_labels)
     else
       changelog_label_mapping
     end
@@ -296,9 +288,5 @@ class Changelog
 
   def patch_level_labels
     @config["patch_level_labels"]
-  end
-
-  def minor_level_labels
-    @config["minor_level_labels"]
   end
 end

@@ -480,7 +480,6 @@ class Gem::TestCase < Test::Unit::TestCase
       Gem.instance_variable_set :@default_dir, nil
     end
 
-    Gem::Specification._clear_load_cache
     Gem::Specification.unresolved_deps.clear
     Gem::refresh
 
@@ -1299,6 +1298,22 @@ Also, a list:
     yield
   ensure
     Gem.instance_variable_set :@ruby, orig_ruby
+  end
+
+  def with_internal_encoding(encoding)
+    int_enc = Encoding.default_internal
+    silence_warnings { Encoding.default_internal = encoding }
+
+    yield
+  ensure
+    silence_warnings { Encoding.default_internal = int_enc }
+  end
+
+  def silence_warnings
+    old_verbose, $VERBOSE = $VERBOSE, false
+    yield
+  ensure
+    $VERBOSE = old_verbose
   end
 
   class << self
