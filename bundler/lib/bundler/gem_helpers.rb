@@ -5,11 +5,13 @@ module Bundler
     GENERIC_CACHE = { Gem::Platform::RUBY => Gem::Platform::RUBY } # rubocop:disable Style/MutableConstant
     GENERICS = [
       [Gem::Platform.new("java"), Gem::Platform.new("java")],
+      [Gem::Platform.new("universal-java"), Gem::Platform.new("java")],
       [Gem::Platform.new("mswin32"), Gem::Platform.new("mswin32")],
       [Gem::Platform.new("mswin64"), Gem::Platform.new("mswin64")],
       [Gem::Platform.new("universal-mingw32"), Gem::Platform.new("universal-mingw32")],
       [Gem::Platform.new("x64-mingw32"), Gem::Platform.new("x64-mingw32")],
       [Gem::Platform.new("x86_64-mingw32"), Gem::Platform.new("x64-mingw32")],
+      [Gem::Platform.new("x64-mingw-ucrt"), Gem::Platform.new("x64-mingw-ucrt")],
       [Gem::Platform.new("mingw32"), Gem::Platform.new("x86-mingw32")],
     ].freeze
 
@@ -48,7 +50,7 @@ module Bundler
       sorted_matching = matching.sort_by {|spec| platform_specificity_match(spec.platform, platform) }
       exemplary_spec = sorted_matching.first
 
-      sorted_matching.take_while{|spec| same_specificity(platform, spec, exemplary_spec) && same_deps(spec, exemplary_spec) }
+      sorted_matching.take_while {|spec| same_specificity(platform, spec, exemplary_spec) && same_deps(spec, exemplary_spec) }
     end
     module_function :select_best_platform_match
 

@@ -723,6 +723,36 @@ RSpec.describe "bundle install with gem sources" do
     end
   end
 
+  describe "when bundle extensions path does not have write access", :permissions do
+    let(:extensions_path) { bundled_app("vendor/#{Bundler.ruby_scope}/extensions/#{Gem::Platform.local}/#{Gem.extension_api_version}") }
+
+    before do
+      FileUtils.mkdir_p(extensions_path)
+      gemfile <<-G
+        source "#{file_uri_for(gem_repo1)}"
+        gem 'simple_binary'
+      G
+    end
+
+    it "should display a proper message to explain the problem" do
+      FileUtils.chmod("-x", extensions_path)
+      bundle "config set --local path vendor"
+
+      begin
+        bundle :install, :raise_on_error => false
+      ensure
+        FileUtils.chmod("+x", extensions_path)
+      end
+
+      expect(err).not_to include("ERROR REPORT TEMPLATE")
+
+      expect(err).to include(
+        "There was an error while trying to create `#{extensions_path.join("simple_binary-1.0")}`. " \
+        "It is likely that you need to grant executable permissions for all parent directories and write permissions for `#{extensions_path}`."
+      )
+    end
+  end
+
   describe "when the path of a specific gem is not writable", :permissions do
     let(:gems_path) { bundled_app("vendor/#{Bundler.ruby_scope}/gems") }
     let(:foo_path) { gems_path.join("foo-1.0.0") }
@@ -755,12 +785,8 @@ RSpec.describe "bundle install with gem sources" do
       end
 
       expect(err).not_to include("ERROR REPORT TEMPLATE")
-
-      expect(err).to include(
-        "There was an error while trying to delete `#{foo_path}`. " \
-        "It is likely that you need to grant executable permissions for all parent directories " \
-        "and write permissions for `#{gems_path}`, and the same thing for all subdirectories inside #{foo_path}."
-      )
+      expect(err).to include("Could not delete previous installation of `#{foo_path}`.")
+      expect(err).to include("The underlying error was Errno::EACCES")
     end
   end
 
@@ -798,7 +824,7 @@ RSpec.describe "bundle install with gem sources" do
     it "includes the standalone path" do
       bundle "binstubs rack", :standalone => true
       standalone_line = File.read(bundled_app("bin/rackup")).each_line.find {|line| line.include? "$:.unshift" }.strip
-      expect(standalone_line).to eq %($:.unshift File.expand_path "../../bundle", path.realpath)
+      expect(standalone_line).to eq %($:.unshift File.expand_path "../bundle", __dir__)
     end
   end
 
@@ -856,7 +882,7 @@ RSpec.describe "bundle install with gem sources" do
 
       expect(err).to eq(
         "Your bundle only supports platforms [\"x86_64-darwin-19\"] but your local platform is x86_64-linux. " \
-        "Add the current platform to the lockfile with `bundle lock --add-platform x86_64-linux` and try again."
+        "Add the current platform to the lockfile with\n`bundle lock --add-platform x86_64-linux` and try again."
       )
     end
   end
@@ -971,6 +997,39 @@ RSpec.describe "bundle install with gem sources" do
       G
 
       expect(last_command).to be_success
+    end
+  end
+
+  context "with a symlinked configured as bundle path and a gem with symlinks" do
+    before do
+      symlinked_bundled_app = tmp("bundled_app-symlink")
+      File.symlink(bundled_app, symlinked_bundled_app)
+      bundle "config path #{File.join(symlinked_bundled_app, ".vendor")}"
+
+      binman_path = tmp("binman")
+      FileUtils.mkdir_p binman_path
+
+      readme_path = File.join(binman_path, "README.markdown")
+      FileUtils.touch(readme_path)
+
+      man_path = File.join(binman_path, "man", "man0")
+      FileUtils.mkdir_p man_path
+
+      File.symlink("../../README.markdown", File.join(man_path, "README.markdown"))
+
+      build_repo4 do
+        build_gem "binman", :path => gem_repo4("gems"), :lib_path => binman_path, :no_default => true do |s|
+          s.files = ["README.markdown", "man/man0/README.markdown"]
+        end
+      end
+    end
+
+    it "installs fine" do
+      install_gemfile <<~G
+        source "#{file_uri_for(gem_repo4)}"
+
+        gem "binman"
+      G
     end
   end
 end

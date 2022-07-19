@@ -897,7 +897,7 @@ RSpec.describe "the lockfile format" do
 
     install_gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
-      path File.expand_path("../foo", __FILE__) do
+      path File.expand_path("foo", __dir__) do
         gem "foo"
       end
     G
@@ -982,7 +982,7 @@ RSpec.describe "the lockfile format" do
           rack (1.0.0)
 
       PLATFORMS
-        #{lockfile_platforms_for(["java"] + local_platforms)}
+        #{lockfile_platforms_for(["java", specific_local_platform])}
 
       DEPENDENCIES
         rack

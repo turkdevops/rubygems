@@ -122,6 +122,10 @@ module Spec
         end
 
         build_gem "platform_specific" do |s|
+          s.platform = "x64-mingw-ucrt"
+        end
+
+        build_gem "platform_specific" do |s|
           s.platform = "x86-darwin-100"
           s.write "lib/platform_specific.rb", "PLATFORM_SPECIFIC = '1.0.0 x86-darwin-100'"
         end
@@ -444,8 +448,7 @@ module Spec
         write "ext/extconf.rb", <<-RUBY
           require "mkmf"
 
-
-          # exit 1 unless with_config("simple")
+          $extout = "$(topdir)/" + RbConfig::CONFIG["EXTOUT"] unless RUBY_VERSION < "2.4"
 
           extension_name = "#{name}_c"
           if extra_lib_dir = with_config("ext-lib")
@@ -484,7 +487,7 @@ module Spec
         end
 
         @spec.authors = ["no one"]
-        @spec.files = @files.keys
+        @spec.files += @files.keys
 
         case options[:gemspec]
         when false
@@ -589,7 +592,8 @@ module Spec
 
     class GemBuilder < LibBuilder
       def _build(opts)
-        lib_path = super(opts.merge(:path => @context.tmp(".tmp/#{@spec.full_name}"), :no_default => opts[:no_default]))
+        lib_path = opts[:lib_path] || @context.tmp(".tmp/#{@spec.full_name}")
+        lib_path = super(opts.merge(:path => lib_path, :no_default => opts[:no_default]))
         destination = opts[:path] || _default_path
         FileUtils.mkdir_p(lib_path.join(destination))
 

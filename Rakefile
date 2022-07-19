@@ -6,8 +6,8 @@ require "rake/testtask"
 
 desc "Setup Rubygems dev environment"
 task :setup do
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "install", "--gemfile=dev_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--gemfile=release_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "install", "--gemfile=bundler/tool/bundler/dev_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--gemfile=bundler/tool/bundler/release_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--gemfile=bundler/tool/bundler/test_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--gemfile=bundler/tool/bundler/rubocop_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--gemfile=bundler/tool/bundler/rubocop23_gems.rb"
@@ -18,22 +18,22 @@ task :setup do
 end
 
 desc "Update Rubygems dev environment"
-task :update do |_, args|
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=dev_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=release_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/test_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/rubocop_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/rubocop23_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/rubocop24_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/standard_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/standard23_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", *args, "--gemfile=bundler/tool/bundler/standard24_gems.rb"
+task :update do
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--gemfile=bundler/tool/bundler/dev_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/release_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/test_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/rubocop_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/rubocop23_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/rubocop24_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/standard_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/standard23_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "lock", "--update", "--gemfile=bundler/tool/bundler/standard24_gems.rb"
 end
 
 desc "Update the locked bundler version in dev environment"
 task :update_locked_bundler do |_, args|
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=dev_gems.rb"
-  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=release_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/dev_gems.rb"
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/release_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/test_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/rubocop_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/rubocop23_gems.rb"
@@ -41,6 +41,11 @@ task :update_locked_bundler do |_, args|
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/standard_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/standard23_gems.rb"
   sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", "--bundler", "--gemfile=bundler/tool/bundler/standard24_gems.rb"
+end
+
+desc "Update specific development dependencies"
+task :update_dev_dep do |_, args|
+  sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "update", *args, "--gemfile=bundler/tool/bundler/dev_gems.rb"
 end
 
 desc "Setup git hooks"
@@ -56,6 +61,15 @@ Rake::TestTask.new do |t|
   t.libs << "bundler/lib"
 
   t.test_files = FileList['test/**/test_*.rb']
+end
+
+namespace 'test' do
+  desc 'Run each test isolatedly by specifying the relative test file path'
+  task 'isolated' do
+    FileList['test/**/test_*.rb'].each do |file|
+      sh Gem.ruby, '-Ilib:test:bundler/lib', file
+    end
+  end
 end
 
 task :default => :test
@@ -114,9 +128,11 @@ if File.exist?("util/automatiek.rake")
   #   copy works consistently in all supported rubies. This one can be removed
   #   once we drop ruby 2.4 support, since newer versions include a version of
   #   `did_you_mean` that does not require any changes.
+  # * Add an empty .document file to the library's root path to hint RDoc that
+  #   this library should not be documented.
   desc "Vendor a specific version of optparse"
   Automatiek::RakeTask.new("optparse") do |lib|
-    lib.version = "0.2.0"
+    lib.version = "master"
     lib.download = { :github => "https://github.com/ruby/optparse" }
     lib.namespace = "OptionParser"
     lib.prefix = "Gem"
@@ -126,6 +142,11 @@ if File.exist?("util/automatiek.rake")
 end
 
 namespace :rubocop do
+  desc "Setup gems necessary to lint Ruby code"
+  task(:setup) do
+    sh "ruby", "-I", "lib", "bundler/spec/support/bundle.rb", "install", "--gemfile=bundler/tool/bundler/lint_gems.rb"
+  end
+
   desc "Run rubocop for RubyGems. Pass positional arguments, e.g. -a, as Rake arguments."
   task(:rubygems) do |_, args|
     sh "util/rubocop", *args
@@ -137,7 +158,7 @@ namespace :rubocop do
   end
 end
 
-task rubocop: %w[rubocop:rubygems rubocop:bundler]
+task rubocop: %w[rubocop:setup rubocop:rubygems rubocop:bundler]
 
 # --------------------------------------------------------------------
 # Creating a release
@@ -434,7 +455,7 @@ module Rubygems
   class ProjectFiles
     def self.all
       files = []
-      exclude = %r{\A(?:\.|dev_gems|release_gems|bundler/(?!lib|exe|[^/]+\.md|bundler.gemspec)|util/|Rakefile)}
+      exclude = %r{\A(?:\.|bundler/(?!lib|exe|[^/]+\.md|bundler.gemspec)|util/|Rakefile)}
       tracked_files = `git ls-files`.split("\n")
 
       tracked_files.each do |path|

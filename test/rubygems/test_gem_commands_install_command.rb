@@ -277,6 +277,22 @@ ERROR:  Could not find a valid gem 'bar' (= 0.5) (required by 'foo' (>= 0)) in a
     assert_match(/ould not find a valid gem 'nonexistent'/, @ui.error)
   end
 
+  def test_execute_nonexistent_force
+    spec_fetcher
+
+    @cmd.options[:args] = %w[nonexistent]
+    @cmd.options[:force] = true
+
+    use_ui @ui do
+      e = assert_raise Gem::MockGemUi::TermError do
+        @cmd.execute
+      end
+      assert_equal 2, e.exit_code
+    end
+
+    assert_match(/ould not find a valid gem 'nonexistent'/, @ui.error)
+  end
+
   def test_execute_dependency_nonexistent
     spec_fetcher do |fetcher|
       fetcher.spec 'foo', 2, 'bar' => '0.5'
@@ -505,7 +521,7 @@ ERROR:  Possible alternatives: non_existent_with_hint
   end
 
   def test_execute_required_ruby_version
-    next_ruby = Gem.ruby_version.segments.map.with_index{|n, i| i == 1 ? n + 1 : n }.join(".")
+    next_ruby = Gem.ruby_version.segments.map.with_index {|n, i| i == 1 ? n + 1 : n }.join(".")
 
     local = Gem::Platform.local
     spec_fetcher do |fetcher|
@@ -594,7 +610,7 @@ ERROR:  Possible alternatives: non_existent_with_hint
   end
 
   def test_execute_required_ruby_version_specific_prerelease_not_met
-    next_ruby_pre = Gem.ruby_version.segments.map.with_index{|n, i| i == 1 ? n + 1 : n }.join(".") + ".a"
+    next_ruby_pre = Gem.ruby_version.segments.map.with_index {|n, i| i == 1 ? n + 1 : n }.join(".") + ".a"
 
     spec_fetcher do |fetcher|
       fetcher.gem 'a', '1.0' do |s|

@@ -22,6 +22,7 @@ Layout/BlockAlignment:
 
 Layout/CaseIndentation:
   Enabled: true
+  EnforcedStyle: end
 
 Layout/ClosingParenthesisIndentation:
   Enabled: true
@@ -32,15 +33,18 @@ Layout/CommentIndentation:
 Layout/ElseAlignment:
   Enabled: true
 
-Layout/EmptyLinesAroundAccessModifier:
-  Enabled: true
-
 # Force Unix line endings.
 Layout/EndOfLine:
   Enabled: true
   EnforcedStyle: lf
 
 Layout/EmptyLines:
+  Enabled: true
+
+Layout/EmptyLinesAroundAccessModifier:
+  Enabled: true
+
+Layout/EmptyLinesAroundBlockBody:
   Enabled: true
 
 Layout/EmptyLinesAroundClassBody:
@@ -72,9 +76,15 @@ Layout/LeadingEmptyLines:
 Layout/SpaceAroundOperators:
   Enabled: true
 
+Layout/SpaceBeforeBlockBraces:
+  Enabled: true
+
 Layout/SpaceInsideBlockBraces:
   Enabled: true
   SpaceBeforeBlockParameters: false
+
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: true
 
 Layout/SpaceInsideParens:
   Enabled: true
@@ -96,6 +106,7 @@ Lint/Debugger:
 
 Layout/EndAlignment:
   Enabled: true
+  EnforcedStyleAlignWith: variable
 
 Naming/HeredocDelimiterCase:
   Enabled: true
@@ -114,10 +125,16 @@ Performance/StringReplacement:
 Security/Open:
   Enabled: true
 
+Style/Dir:
+  Enabled: true
+
 Style/Encoding:
   Enabled: true
   Exclude:
     - test/rubygems/specifications/foo-0.0.1-x86-mswin32.gemspec
+
+Style/ExpandPathArguments:
+  Enabled: true
 
 Style/EvalWithLocation:
   Enabled: true

@@ -218,7 +218,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     end
 
     assert_equal %w[lib/code.rb], files
-    assert_equal [{'lib/code_sym.rb' => 'code.rb'}, {'lib/code_sym2.rb' => '../lib/code.rb'}], symlinks
+    assert_equal [{ 'lib/code_sym.rb' => 'code.rb' }, { 'lib/code_sym2.rb' => '../lib/code.rb' }], symlinks
   end
 
   def test_build
@@ -737,9 +737,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     file = 'foo//file.rb'.dup
     file.taint if RUBY_VERSION < '2.7'
 
-    destination = @destination.sub '/', '//'
-
-    destination = package.install_location file, destination
+    destination = package.install_location file, @destination
 
     assert_equal File.join(@destination, 'foo', 'file.rb'), destination
     refute destination.tainted? if RUBY_VERSION < '2.7'
@@ -822,7 +820,7 @@ class TestGemPackage < Gem::Package::TarTestCase
       }
       tar.add_file 'checksums.yaml.gz', 0444 do |io|
         Zlib::GzipWriter.wrap io do |gz_io|
-          gz_io.write YAML.dump bogus_checksums
+          gz_io.write Psych.dump bogus_checksums
         end
       end
     end
@@ -868,7 +866,7 @@ class TestGemPackage < Gem::Package::TarTestCase
 
       tar.add_file 'checksums.yaml.gz', 0444 do |io|
         Zlib::GzipWriter.wrap io do |gz_io|
-          gz_io.write YAML.dump checksums
+          gz_io.write Psych.dump checksums
         end
       end
 

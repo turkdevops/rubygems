@@ -7,8 +7,9 @@ require_relative "rubygems_ext"
 module Bundler
   class Dependency < Gem::Dependency
     attr_reader :autorequire
-    attr_reader :groups, :platforms, :gemfile, :git, :github, :branch, :ref
+    attr_reader :groups, :platforms, :gemfile, :git, :github, :branch, :ref, :force_ruby_platform
 
+    # rubocop:disable Naming/VariableNumber
     PLATFORM_MAP = {
       :ruby     => Gem::Platform::RUBY,
       :ruby_18  => Gem::Platform::RUBY,
@@ -20,6 +21,9 @@ module Bundler
       :ruby_24  => Gem::Platform::RUBY,
       :ruby_25  => Gem::Platform::RUBY,
       :ruby_26  => Gem::Platform::RUBY,
+      :ruby_27  => Gem::Platform::RUBY,
+      :ruby_30  => Gem::Platform::RUBY,
+      :ruby_31  => Gem::Platform::RUBY,
       :mri      => Gem::Platform::RUBY,
       :mri_18   => Gem::Platform::RUBY,
       :mri_19   => Gem::Platform::RUBY,
@@ -30,6 +34,9 @@ module Bundler
       :mri_24   => Gem::Platform::RUBY,
       :mri_25   => Gem::Platform::RUBY,
       :mri_26   => Gem::Platform::RUBY,
+      :mri_27   => Gem::Platform::RUBY,
+      :mri_30   => Gem::Platform::RUBY,
+      :mri_31   => Gem::Platform::RUBY,
       :rbx      => Gem::Platform::RUBY,
       :truffleruby => Gem::Platform::RUBY,
       :jruby    => Gem::Platform::JAVA,
@@ -45,6 +52,9 @@ module Bundler
       :mswin_24 => Gem::Platform::MSWIN,
       :mswin_25 => Gem::Platform::MSWIN,
       :mswin_26 => Gem::Platform::MSWIN,
+      :mswin_27 => Gem::Platform::MSWIN,
+      :mswin_30 => Gem::Platform::MSWIN,
+      :mswin_31 => Gem::Platform::MSWIN,
       :mswin64    => Gem::Platform::MSWIN64,
       :mswin64_19 => Gem::Platform::MSWIN64,
       :mswin64_20 => Gem::Platform::MSWIN64,
@@ -54,6 +64,9 @@ module Bundler
       :mswin64_24 => Gem::Platform::MSWIN64,
       :mswin64_25 => Gem::Platform::MSWIN64,
       :mswin64_26 => Gem::Platform::MSWIN64,
+      :mswin64_27 => Gem::Platform::MSWIN64,
+      :mswin64_30 => Gem::Platform::MSWIN64,
+      :mswin64_31 => Gem::Platform::MSWIN64,
       :mingw    => Gem::Platform::MINGW,
       :mingw_18 => Gem::Platform::MINGW,
       :mingw_19 => Gem::Platform::MINGW,
@@ -64,6 +77,9 @@ module Bundler
       :mingw_24 => Gem::Platform::MINGW,
       :mingw_25 => Gem::Platform::MINGW,
       :mingw_26 => Gem::Platform::MINGW,
+      :mingw_27 => Gem::Platform::MINGW,
+      :mingw_30 => Gem::Platform::MINGW,
+      :mingw_31 => Gem::Platform::MINGW,
       :x64_mingw    => Gem::Platform::X64_MINGW,
       :x64_mingw_20 => Gem::Platform::X64_MINGW,
       :x64_mingw_21 => Gem::Platform::X64_MINGW,
@@ -72,7 +88,11 @@ module Bundler
       :x64_mingw_24 => Gem::Platform::X64_MINGW,
       :x64_mingw_25 => Gem::Platform::X64_MINGW,
       :x64_mingw_26 => Gem::Platform::X64_MINGW,
+      :x64_mingw_27 => Gem::Platform::X64_MINGW,
+      :x64_mingw_30 => Gem::Platform::X64_MINGW,
+      :x64_mingw_31 => Gem::Platform::X64_MINGW,
     }.freeze
+    # rubocop:enable Naming/VariableNumber
 
     def initialize(name, version, options = {}, &blk)
       type = options["type"] || :runtime
@@ -89,6 +109,7 @@ module Bundler
       @env            = options["env"]
       @should_include = options.fetch("should_include", true)
       @gemfile        = options["gemfile"]
+      @force_ruby_platform = options["force_ruby_platform"]
 
       @autorequire = Array(options["require"] || []) if options.key?("require")
     end
@@ -102,7 +123,7 @@ module Bundler
     end
 
     def expanded_platforms
-      @expanded_platforms ||= @platforms.map {|pl| PLATFORM_MAP[pl] }.compact.uniq
+      @expanded_platforms ||= @platforms.map {|pl| PLATFORM_MAP[pl] }.compact.flatten.uniq
     end
 
     def should_include?

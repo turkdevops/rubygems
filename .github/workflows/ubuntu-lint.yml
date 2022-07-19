@@ -16,12 +16,14 @@ jobs:
   ubuntu_lint:
     name: Lint
     runs-on: ubuntu-20.04
+    env:
+      RUBYOPT: -Ilib
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.0.3
+          ruby-version: 3.1.2
           bundler: none
       - name: Install Dependencies
         run: rake setup
@@ -32,7 +34,7 @@ jobs:
       - name: Install & Check Dependencies
         run: bin/rake dev:frozen_deps
         working-directory: ./bundler
-      - name: "Check RVM integration, man:check"
-        run: bin/rake check_rvm_integration man:check
+      - name: Misc checks
+        run: bin/rake check_rvm_integration man:check check_rubygems_integration
         working-directory: ./bundler
     timeout-minutes: 15

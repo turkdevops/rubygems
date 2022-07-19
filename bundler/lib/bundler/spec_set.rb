@@ -11,28 +11,27 @@ module Bundler
       @specs = specs
     end
 
-    def for(dependencies, check = false, match_current_platform = false)
-      handled = []
-      deps = dependencies.dup
+    def for(dependencies, check = false, platforms = [nil])
+      handled = ["bundler"].product(platforms).map {|k| [k, true] }.to_h
+      deps = dependencies.product(platforms).map {|dep, platform| [dep.name, platform && dep.force_ruby_platform ? Gem::Platform::RUBY : platform] }
       specs = []
 
       loop do
         break unless dep = deps.shift
-        next if handled.any?{|d| d.name == dep.name && (match_current_platform || d.__platform == dep.__platform) } || dep.name == "bundler"
+        next if handled.key?(dep)
 
-        handled << dep
+        handled[dep] = true
 
-        specs_for_dep = spec_for_dependency(dep, match_current_platform)
+        specs_for_dep = specs_for_dependency(*dep)
         if specs_for_dep.any?
-          match_current_platform ? specs += specs_for_dep : specs |= specs_for_dep
+          specs.concat(specs_for_dep)
 
           specs_for_dep.first.dependencies.each do |d|
             next if d.type == :development
-            d = DepProxy.get_proxy(d, dep.__platform) unless match_current_platform
-            deps << d
+            deps << [d.name, dep[1]]
           end
         elsif check
-          return false
+          specs << IncompleteSpecification.new(*dep)
         end
       end
 
@@ -40,7 +39,7 @@ module Bundler
         specs << spec
       end
 
-      check ? true : specs
+      specs
     end
 
     def [](key)
@@ -67,7 +66,7 @@ module Bundler
     end
 
     def materialize(deps)
-      materialized = self.for(deps, false, true)
+      materialized = self.for(deps, true).uniq
 
       materialized.map! do |s|
         next s unless s.is_a?(LazySpecification)
@@ -93,6 +92,10 @@ module Bundler
 
     def missing_specs
       @specs.select {|s| s.is_a?(LazySpecification) }
+    end
+
+    def incomplete_specs
+      @specs.select {|s| s.is_a?(IncompleteSpecification) }
     end
 
     def merge(set)
@@ -169,12 +172,13 @@ module Bundler
       @specs.sort_by(&:name).each {|s| yield s }
     end
 
-    def spec_for_dependency(dep, match_current_platform)
-      specs_for_platforms = lookup[dep.name]
-      if match_current_platform
-        GemHelpers.select_best_platform_match(specs_for_platforms.select{|s| Gem::Platform.match_spec?(s) }, Bundler.local_platform)
+    def specs_for_dependency(name, platform)
+      specs_for_name = lookup[name]
+      if platform.nil?
+        GemHelpers.select_best_platform_match(specs_for_name.select {|s| Gem::Platform.match_spec?(s) }, Bundler.local_platform)
       else
-        GemHelpers.select_best_platform_match(specs_for_platforms, dep.__platform)
+        specs_for_name_and_platform = GemHelpers.select_best_platform_match(specs_for_name, platform)
+        specs_for_name_and_platform.any? ? specs_for_name_and_platform : specs_for_name
       end
     end
 

@@ -92,9 +92,7 @@ RSpec.describe "bundle install with git sources" do
       expect(err).to include("The source contains the following gems matching 'foo':\n  * foo-1.0")
     end
 
-    it "complains with version and platform if pinned specs don't exist in the git repo" do
-      simulate_platform "java"
-
+    it "complains with version and platform if pinned specs don't exist in the git repo", :jruby_only do
       build_git "only_java" do |s|
         s.platform = "java"
       end
@@ -109,9 +107,7 @@ RSpec.describe "bundle install with git sources" do
       expect(err).to include("The source contains the following gems matching 'only_java':\n  * only_java-1.0-java")
     end
 
-    it "complains with multiple versions and platforms if pinned specs don't exist in the git repo" do
-      simulate_platform "java"
-
+    it "complains with multiple versions and platforms if pinned specs don't exist in the git repo", :jruby_only do
       build_git "only_java", "1.0" do |s|
         s.platform = "java"
       end
@@ -418,9 +414,6 @@ RSpec.describe "bundle install with git sources" do
 
   describe "when specifying local override" do
     it "uses the local repository instead of checking a new one out" do
-      # We don't generate it because we actually don't need it
-      # build_git "rack", "0.8"
-
       build_git "rack", "0.8", :path => lib_path("local-rack") do |s|
         s.write "lib/rack.rb", "puts :LOCAL"
       end
@@ -1187,7 +1180,7 @@ RSpec.describe "bundle install with git sources" do
         s.extensions << "Rakefile"
         s.write "Rakefile", <<-RUBY
           task :default do
-            path = File.expand_path("../lib", __FILE__)
+            path = File.expand_path("lib", __dir__)
             FileUtils.mkdir_p(path)
             File.open("\#{path}/foo.rb", "w") do |f|
               f.puts "FOO = 'YES'"
@@ -1213,11 +1206,12 @@ RSpec.describe "bundle install with git sources" do
       expect(out).to include(Pathname.glob(default_bundle_path("bundler/gems/extensions/**/foo-1.0-*")).first.to_s)
     end
 
-    it "does not use old extension after ref changes", :ruby_repo do
+    it "does not use old extension after ref changes" do
       git_reader = build_git "foo", :no_default => true do |s|
         s.extensions = ["ext/extconf.rb"]
         s.write "ext/extconf.rb", <<-RUBY
           require "mkmf"
+          $extout = "$(topdir)/" + RbConfig::CONFIG["EXTOUT"] unless RUBY_VERSION < "2.4"
           create_makefile("foo")
         RUBY
         s.write "ext/foo.c", "void Init_foo() {}"
@@ -1280,7 +1274,7 @@ In Gemfile:
         s.extensions << "Rakefile"
         s.write "Rakefile", <<-RUBY
           task :default do
-            path = File.expand_path("../lib", __FILE__)
+            path = File.expand_path("lib", __dir__)
             FileUtils.mkdir_p(path)
             cur_time = Time.now.to_f.to_s
             File.open("\#{path}/foo.rb", "w") do |f|
@@ -1321,7 +1315,7 @@ In Gemfile:
         s.extensions << "Rakefile"
         s.write "Rakefile", <<-RUBY
           task :default do
-            path = File.expand_path("../lib", __FILE__)
+            path = File.expand_path("lib", __dir__)
             FileUtils.mkdir_p(path)
             cur_time = Time.now.to_f.to_s
             File.open("\#{path}/foo.rb", "w") do |f|
@@ -1364,7 +1358,7 @@ In Gemfile:
         s.extensions << "Rakefile"
         s.write "Rakefile", <<-RUBY
           task :default do
-            path = File.expand_path("../lib", __FILE__)
+            path = File.expand_path("lib", __dir__)
             FileUtils.mkdir_p(path)
             cur_time = Time.now.to_f.to_s
             File.open("\#{path}/foo.rb", "w") do |f|

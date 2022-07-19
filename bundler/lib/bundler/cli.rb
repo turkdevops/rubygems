@@ -391,7 +391,7 @@ module Bundler
       are up to date, Bundler will exit with a status of 0. Otherwise, it will exit 1.
 
       For more information on patch level options (--major, --minor, --patch,
-      --update-strict) see documentation on the same options on the update command.
+      --strict) see documentation on the same options on the update command.
     D
     method_option "group", :type => :string, :banner => "List gems from a specific group"
     method_option "groups", :type => :boolean, :banner => "List gems organized by groups"
@@ -399,10 +399,9 @@ module Bundler
       "Do not attempt to fetch gems remotely and use the gem cache instead"
     method_option "pre", :type => :boolean, :banner => "Check for newer pre-release gems"
     method_option "source", :type => :array, :banner => "Check against a specific source"
-    strict_is_update = Bundler.feature_flag.forget_cli_options?
-    method_option "filter-strict", :type => :boolean, :aliases => strict_is_update ? [] : %w[--strict], :banner =>
+    method_option "filter-strict", :type => :boolean, :banner =>
       "Only list newer versions allowed by your Gemfile requirements"
-    method_option "update-strict", :type => :boolean, :aliases => strict_is_update ? %w[--strict] : [], :banner =>
+    method_option "strict", :type => :boolean, :aliases => "--update-strict", :banner =>
       "Strict conservative resolution, do not allow any gem to be updated past latest --patch | --minor | --major"
     method_option "minor", :type => :boolean, :banner => "Prefer updating only to next minor version"
     method_option "major", :type => :boolean, :banner => "Prefer updating to next major version (default)"
@@ -611,7 +610,7 @@ module Bundler
     private :gem
 
     def self.source_root
-      File.expand_path(File.join(File.dirname(__FILE__), "templates"))
+      File.expand_path("templates", __dir__)
     end
 
     desc "clean [OPTIONS]", "Cleans up unused gems in your bundler directory", :hide => true
@@ -809,17 +808,10 @@ module Bundler
 
       current = Gem::Version.new(VERSION)
       return if current >= latest
-      latest_installed = Bundler.rubygems.find_name("bundler").map(&:version).max
 
-      installation = "To install the latest version, run `gem install bundler#{" --pre" if latest.prerelease?}`"
-      if latest_installed && latest_installed > current
-        suggestion = "To update to the most recent installed version (#{latest_installed}), run `bundle update --bundler`"
-        suggestion = "#{installation}\n#{suggestion}" if latest_installed < latest
-      else
-        suggestion = installation
-      end
-
-      Bundler.ui.warn "The latest bundler is #{latest}, but you are currently running #{current}.\n#{suggestion}"
+      Bundler.ui.warn \
+        "The latest bundler is #{latest}, but you are currently running #{current}.\n" \
+        "To update to the most recent version, run `bundle update --bundler`"
     rescue RuntimeError
       nil
     end

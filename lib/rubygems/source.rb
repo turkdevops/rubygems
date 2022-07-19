@@ -26,15 +26,8 @@ class Gem::Source
   # Creates a new Source which will use the index located at +uri+.
 
   def initialize(uri)
-    begin
-      unless uri.kind_of? URI
-        uri = URI.parse(uri.to_s)
-      end
-    rescue URI::InvalidURIError
-      raise if Gem::Source == self.class
-    end
-
-    @uri = uri
+    require_relative "uri"
+    @uri = Gem::Uri.parse!(uri)
     @update_cache = nil
   end
 
@@ -81,12 +74,12 @@ class Gem::Source
     return Gem::Resolver::IndexSet.new self if 'file' == uri.scheme
 
     fetch_uri = if uri.host == "rubygems.org"
-                  index_uri = uri.dup
-                  index_uri.host = "index.rubygems.org"
-                  index_uri
-                else
-                  uri
-                end
+      index_uri = uri.dup
+      index_uri.host = "index.rubygems.org"
+      index_uri
+    else
+      uri
+    end
 
     bundler_api_uri = enforce_trailing_slash(fetch_uri)
 

@@ -50,7 +50,7 @@ RSpec.describe "bundle install across platforms" do
     expect(the_bundle).to include_gems "platform_specific 1.0 JAVA"
   end
 
-  it "pulls the pure ruby version on jruby if the java platform is not present in the lockfile and bundler is run in frozen mode", :jruby do
+  it "pulls the pure ruby version on jruby if the java platform is not present in the lockfile and bundler is run in frozen mode", :jruby_only do
     lockfile <<-G
       GEM
         remote: #{file_uri_for(gem_repo1)}
@@ -86,13 +86,13 @@ RSpec.describe "bundle install across platforms" do
     expect(the_bundle).to include_gems "nokogiri 1.4.2 JAVA", "weakling 0.0.3"
 
     simulate_new_machine
-
-    simulate_platform "ruby"
+    bundle "config set --local force_ruby_platform true"
     bundle "install"
 
     expect(the_bundle).to include_gems "nokogiri 1.4.2"
     expect(the_bundle).not_to include_gems "weakling"
 
+    simulate_new_machine
     simulate_platform "java"
     bundle "install"
 
@@ -216,28 +216,28 @@ RSpec.describe "bundle install across platforms" do
         pry
 
       BUNDLED WITH
-        #{Bundler::VERSION}
+         1.16.1
     L
 
     aggregate_failures do
       lockfile bad_lockfile
-      bundle :install
+      bundle :install, :env => { "BUNDLER_VERSION" => Bundler::VERSION }
       expect(lockfile).to eq good_lockfile
 
       lockfile bad_lockfile
-      bundle :update, :all => true
+      bundle :update, :all => true, :env => { "BUNDLER_VERSION" => Bundler::VERSION }
       expect(lockfile).to eq good_lockfile
 
       lockfile bad_lockfile
-      bundle "update ffi"
+      bundle "update ffi", :env => { "BUNDLER_VERSION" => Bundler::VERSION }
       expect(lockfile).to eq good_lockfile
 
       lockfile bad_lockfile
-      bundle "update empyrean"
+      bundle "update empyrean", :env => { "BUNDLER_VERSION" => Bundler::VERSION }
       expect(lockfile).to eq good_lockfile
 
       lockfile bad_lockfile
-      bundle :lock
+      bundle :lock, :env => { "BUNDLER_VERSION" => Bundler::VERSION }
       expect(lockfile).to eq good_lockfile
     end
   end
@@ -332,8 +332,6 @@ end
 
 RSpec.describe "bundle install with platform conditionals" do
   it "installs gems tagged w/ the current platforms" do
-    skip "platform issues" if Gem.win_platform?
-
     install_gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
 
@@ -402,8 +400,6 @@ RSpec.describe "bundle install with platform conditionals" do
   end
 
   it "installs gems tagged w/ the current platforms inline" do
-    skip "platform issues" if Gem.win_platform?
-
     install_gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
       gem "nokogiri", :platforms => :#{local_tag}
@@ -422,8 +418,6 @@ RSpec.describe "bundle install with platform conditionals" do
   end
 
   it "installs gems tagged w/ the current platform inline" do
-    skip "platform issues" if Gem.win_platform?
-
     install_gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
       gem "nokogiri", :platform => :#{local_tag}
@@ -453,7 +447,7 @@ RSpec.describe "bundle install with platform conditionals" do
   end
 
   it "does not attempt to install gems from :rbx when using --local" do
-    simulate_platform "ruby"
+    bundle "config set --local force_ruby_platform true"
 
     gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
@@ -465,12 +459,10 @@ RSpec.describe "bundle install with platform conditionals" do
   end
 
   it "does not attempt to install gems from other rubies when using --local" do
-    simulate_platform "ruby"
-    other_ruby_version_tag = RUBY_VERSION =~ /^1\.8/ ? :ruby_19 : :ruby_18
-
+    bundle "config set --local force_ruby_platform true"
     gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
-      gem "some_gem", platform: :#{other_ruby_version_tag}
+      gem "some_gem", platform: :ruby_22
     G
 
     bundle "install --local"
@@ -478,7 +470,7 @@ RSpec.describe "bundle install with platform conditionals" do
   end
 
   it "does not print a warning when a dependency is unused on a platform different from the current one" do
-    simulate_platform "ruby"
+    bundle "config set --local force_ruby_platform true"
 
     gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"

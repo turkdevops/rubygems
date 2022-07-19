@@ -208,7 +208,7 @@ RSpec.describe "bundle clean" do
     G
 
     FileUtils.mkdir_p(bundled_app("real-path"))
-    FileUtils.ln_sf(bundled_app("real-path"), bundled_app("symlink-path"))
+    File.symlink(bundled_app("real-path"), bundled_app("symlink-path"))
 
     bundle "config set path #{bundled_app("symlink-path")}"
     bundle "install"
@@ -638,7 +638,12 @@ RSpec.describe "bundle clean" do
       s.executables = "irb"
     end
 
-    realworld_system_gems "fiddle --version 1.0.8", "tsort --version 0.1.0", "pathname --version 0.1.0", "set --version 1.0.1"
+    if Gem.win_platform? && RUBY_VERSION < "3.1.0"
+      default_fiddle_version = ruby "require 'fiddle'; puts Gem.loaded_specs['fiddle'].version"
+      realworld_system_gems "fiddle --version #{default_fiddle_version}"
+    end
+
+    realworld_system_gems "tsort --version 0.1.0", "pathname --version 0.1.0", "set --version 1.0.1"
 
     install_gemfile <<-G
       source "#{file_uri_for(gem_repo2)}"
@@ -787,7 +792,7 @@ RSpec.describe "bundle clean" do
     should_not_have_gems "foo-1.0"
   end
 
-  it "doesn't remove extensions artifacts from bundled git gems after clean", :ruby_repo do
+  it "doesn't remove extensions artifacts from bundled git gems after clean" do
     build_git "very_simple_git_binary", &:add_c_extension
 
     revision = revision_for(lib_path("very_simple_git_binary-1.0"))
@@ -810,7 +815,7 @@ RSpec.describe "bundle clean" do
     expect(vendored_gems("bundler/gems/very_simple_git_binary-1.0-#{revision[0..11]}")).to exist
   end
 
-  it "removes extension directories", :ruby_repo do
+  it "removes extension directories" do
     gemfile <<-G
       source "#{file_uri_for(gem_repo1)}"
 
@@ -846,7 +851,7 @@ RSpec.describe "bundle clean" do
     expect(simple_binary_extensions_dir).to exist
   end
 
-  it "removes git extension directories", :ruby_repo do
+  it "removes git extension directories" do
     build_git "very_simple_git_binary", &:add_c_extension
 
     revision = revision_for(lib_path("very_simple_git_binary-1.0"))

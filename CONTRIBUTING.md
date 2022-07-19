@@ -29,9 +29,22 @@ here: https://guides.rubygems.org/contributing/
 
 ## Getting Started
 
+### Installing dependencies
+
     rake setup
 
-> Optionally you can configure git hooks with: rake git_hooks
+> **NOTE**: If the above fails with permission related errors, you're most
+> likely using a global Ruby installation (like the one packaged by your OS),
+> which sets `GEM_HOME` to a location regular users can't write to. Consider
+> using a Ruby version manager like [RVM](https://github.com/rvm/rvm),
+> [rbenv](https://github.com/rbenv/rbenv) or
+> [chruby](https://github.com/postmodern/chruby). These will install Ruby to a
+> location regular users can write to, so you won't run into permission issues.
+> Alternatively, consider setting `GEM_HOME` environment variable to a writable
+> location with something like `export GEM_HOME=/tmp/rubygems.gems` and try
+> again.
+
+### Manually trying your local changes
 
 To run commands like `gem install` from the repo:
 
@@ -61,7 +74,7 @@ Everything needs to be run from the `bundler/` subfolder.
 
 To setup bundler tests:
 
-    bin/rake spec:parallel_deps
+    rake spec:parallel_deps
 
 To run the entire bundler test suite in parallel (it takes a while):
 
@@ -75,6 +88,16 @@ To run an individual test file location for example in `spec/install/gems/standa
 
     bin/rspec spec/install/gems/standalone_spec.rb
 
+### Checking code style
+
+You can check compliance with our code style with
+
+    rake rubocop
+
+Optionally you can configure git hooks with to check this before every commit with
+
+    rake git_hooks
+
 ## Issues
 
 RubyGems uses labels to track all issues and pull requests. In order to
@@ -84,11 +107,14 @@ in the rubygems repository.
 ### Contribution
 
 These labels are made to guide contributors to issue/pull requests that they
-can help with. That are marked with a light gray `contribution: *`
+can help with.
 
-*   **small** - The issue described here will take a small amount of work to
-    resolve, and is a good option for a new contributor
-*   **unclaimed** - The issue has not been claimed for work, and is awaiting
+*   **good first issue** - The issue described here is considered a good option
+    for a new contributor. We encourage new contributors though to work on
+    whichever issue they find most interesting, the ones labeled here as just
+    estimated to have a reasonable level of complexity for someone new to the
+    code base.
+*   **help wanted** - The issue has not been claimed for work, and is awaiting
     willing volunteers!
 
 

@@ -1,3 +1,194 @@
+# 3.3.18 / 2022-07-14
+
+## Enhancements:
+
+* Make platform `universal-mingw32` match "x64-mingw-ucrt". Pull request
+  #5655 by johnnyshields
+* Add more descriptive messages when `gem update` fails to update some
+  gems. Pull request #5676 by brianleshopify
+* Installs bundler 2.3.18 as a default gem.
+
+## Bug fixes:
+
+* Make sure RubyGems prints no warnings when loading plugins. Pull request
+  #5607 by deivid-rodriguez
+
+# 3.3.17 / 2022-06-29
+
+## Enhancements:
+
+* Document `gem env` argument aliases and add `gem env user_gemhome` and
+  `gem env user_gemdir`. Pull request #5644 by deivid-rodriguez
+* Improve error message when `operating_system.rb` fails to load. Pull
+  request #5658 by deivid-rodriguez
+* Clean up temporary directory after `generate_index --update`. Pull
+  request #5653 by graywolf-at-work
+* Simplify extension builder. Pull request #5626 by deivid-rodriguez
+* Installs bundler 2.3.17 as a default gem.
+
+## Documentation:
+
+* Modify RubyGems issue template to be like the one for Bundler. Pull
+  request #5643 by deivid-rodriguez
+
+# 3.3.16 / 2022-06-15
+
+## Enhancements:
+
+* Auto-fix and warn gem packages including a gemspec with `require_paths`
+  as an array of arrays. Pull request #5615 by deivid-rodriguez
+* Misc cargo builder improvements. Pull request #5459 by ianks
+* Installs bundler 2.3.16 as a default gem.
+
+## Bug fixes:
+
+* Fix incorrect password redaction when there's an error in `gem source
+  -a`. Pull request #5623 by deivid-rodriguez
+* Fix another regression when loading old marshaled specs. Pull request
+  #5610 by deivid-rodriguez
+
+# 3.3.15 / 2022-06-01
+
+## Enhancements:
+
+* Support the change of did_you_mean about `Exception#detailed_message`.
+  Pull request #5560 by mame
+* Installs bundler 2.3.15 as a default gem.
+
+## Bug fixes:
+
+* Fix loading old marshaled specs including `YAML::PrivateType` constant.
+  Pull request #5415 by deivid-rodriguez
+* Fix rubygems update when non default `--install-dir` is configured. Pull
+  request #5566 by deivid-rodriguez
+
+# 3.3.14 / 2022-05-18
+
+## Enhancements:
+
+* Installs bundler 2.3.14 as a default gem.
+
+# 3.3.13 / 2022-05-04
+
+## Enhancements:
+
+* Installs bundler 2.3.13 as a default gem.
+
+## Bug fixes:
+
+* Fix regression when resolving ruby constraints. Pull request #5486 by
+  deivid-rodriguez
+
+## Documentation:
+
+* Clarify description of owner-flags. Pull request #5497 by kronn
+
+# 3.3.12 / 2022-04-20
+
+## Enhancements:
+
+* Less error swallowing when installing gems. Pull request #5475 by
+  deivid-rodriguez
+* Stop considering `RUBY_PATCHLEVEL` for resolution. Pull request #5472 by
+  deivid-rodriguez
+* Bump vendored optparse to latest master. Pull request #5466 by
+  deivid-rodriguez
+* Installs bundler 2.3.12 as a default gem.
+
+## Documentation:
+
+* Fix formatting in docs. Pull request #5470 by peterzhu2118
+* Fix a typo. Pull request #5401 by znz
+
+# 3.3.11 / 2022-04-07
+
+## Enhancements:
+
+* Enable mfa on specific keys during gem signin. Pull request #5305 by
+  aellispierce
+* Prefer `__dir__` to `__FILE__`. Pull request #5444 by deivid-rodriguez
+* Add cargo builder for rust extensions. Pull request #5175 by ianks
+* Installs bundler 2.3.11 as a default gem.
+
+## Documentation:
+
+* Improve RDoc setup. Pull request #5398 by deivid-rodriguez
+
+# 3.3.10 / 2022-03-23
+
+## Enhancements:
+
+* Installs bundler 2.3.10 as a default gem.
+
+## Documentation:
+
+* Enable `Gem::Package` example in RDoc documentation. Pull request #5399
+  by nobu
+* Unhide RDoc documentation from top level `Gem` module. Pull request
+  #5396 by nobu
+
+# 3.3.9 / 2022-03-09
+
+## Enhancements:
+
+* Installs bundler 2.3.9 as a default gem.
+
+# 3.3.8 / 2022-02-23
+
+## Enhancements:
+
+* Installs bundler 2.3.8 as a default gem.
+
+# 3.3.7 / 2022-02-09
+
+## Enhancements:
+
+* Installs bundler 2.3.7 as a default gem.
+
+## Documentation:
+
+* Fix missing rdoc for `Gem::Version`. Pull request #5299 by nevans
+
+# 3.3.6 / 2022-01-26
+
+## Enhancements:
+
+* Forbid downgrading past the originally shipped version on Ruby 3.1. Pull
+  request #5301 by deivid-rodriguez
+* Support `--enable-load-relative` inside binstubs. Pull request #2929 by
+  deivid-rodriguez
+* Let `Version#<=>` accept a String. Pull request #5275 by amatsuda
+* Installs bundler 2.3.6 as a default gem.
+
+## Bug fixes:
+
+* Avoid `flock` on non Windows systems, since it causing issues on NFS
+  file systems. Pull request #5278 by deivid-rodriguez
+* Fix `gem update --system`  for already installed version of
+  `rubygems-update`. Pull request #5285 by loadkpi
+
+# 3.3.5 / 2022-01-12
+
+## Enhancements:
+
+* Don't activate `yaml` gem from RubyGems. Pull request #5266 by
+  deivid-rodriguez
+* Let `gem fetch` understand `<gem>:<version>` syntax and
+  `--[no-]suggestions` flag. Pull request #5242 by ximenasandoval
+* Installs bundler 2.3.5 as a default gem.
+
+## Bug fixes:
+
+* Fix `gem install <non-existent-gem> --force` crash. Pull request #5262
+  by deivid-rodriguez
+* Fix longstanding `gem install` failure on JRuby. Pull request #5228 by
+  deivid-rodriguez
+
+## Documentation:
+
+* Markup `Gem::Specification` documentation with RDoc notations. Pull
+  request #5268 by nobu
+
 # 3.3.4 / 2021-12-29
 
 ## Enhancements:

@@ -10,11 +10,6 @@ require_relative 'command_manager'
 require_relative 'deprecate'
 
 ##
-# Load additional plugins from $LOAD_PATH
-
-Gem.load_env_plugins rescue nil
-
-##
 # Run an instance of the gem program.
 #
 # Gem::GemRunner is only intended for internal use by RubyGems itself.  It
@@ -37,16 +32,19 @@ class Gem::GemRunner
 
     do_configuration args
 
+    Gem.load_env_plugins rescue nil
+    Gem.load_plugins
+
     cmd = @command_manager_class.instance
 
     cmd.command_names.each do |command_name|
       config_args = Gem.configuration[command_name]
       config_args = case config_args
-                    when String
-                      config_args.split ' '
-                    else
-                      Array(config_args)
-                    end
+      when String
+        config_args.split ' '
+      else
+        Array(config_args)
+      end
       Gem::Command.add_specific_extra_args command_name, config_args
     end
 
@@ -75,5 +73,3 @@ class Gem::GemRunner
     Gem::Command.extra_args = Gem.configuration[:gem]
   end
 end
-
-Gem.load_plugins

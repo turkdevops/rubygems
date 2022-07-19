@@ -158,7 +158,7 @@ end
         util_spec "pkg#{pkgi}", pkg_version.to_s, deps
       end
     end
-    base = util_spec "pkg_base", "1", {"pkg0" => ">= 0"}
+    base = util_spec "pkg_base", "1", { "pkg0" => ">= 0" }
 
     Gem::Specification.reset
     install_specs(*packages.flatten.reverse)
@@ -305,10 +305,10 @@ end
 
   def test_require_should_not_conflict
     base = util_spec "0", "1", "A" => ">= 1"
-    a1 = util_spec "A", "1", {"c" => ">= 2", "b" => "> 0"}, "lib/a.rb"
-    a2 = util_spec "A", "2", {"c" => ">= 2", "b" => "> 0"}, "lib/a.rb"
-    b1 = util_spec "b", "1", {"c" => "= 1"}, "lib/d#{$$}.rb"
-    b2 = util_spec "b", "2", {"c" => "= 2"}, "lib/d#{$$}.rb"
+    a1 = util_spec "A", "1", { "c" => ">= 2", "b" => "> 0" }, "lib/a.rb"
+    a2 = util_spec "A", "2", { "c" => ">= 2", "b" => "> 0" }, "lib/a.rb"
+    b1 = util_spec "b", "1", { "c" => "= 1" }, "lib/d#{$$}.rb"
+    b2 = util_spec "b", "2", { "c" => "= 2" }, "lib/d#{$$}.rb"
     c1 = util_spec "c", "1", {}, "lib/c.rb"
     c2 = util_spec "c", "2", {}, "lib/c.rb"
     c3 = util_spec "c", "3", {}, "lib/c.rb"
@@ -992,8 +992,8 @@ dependencies: []
 
     dir_standard_specs = File.join Gem.dir, 'specifications'
 
-    save_gemspec('a-1', '1', dir_standard_specs){|s| s.name = 'a' }
-    save_gemspec('b-1', '1', dir_standard_specs){|s| s.name = 'b' }
+    save_gemspec('a-1', '1', dir_standard_specs) {|s| s.name = 'a' }
+    save_gemspec('b-1', '1', dir_standard_specs) {|s| s.name = 'b' }
 
     assert_equal ['a-1'], Gem::Specification.stubs_for('a').map {|s| s.full_name }
     assert_equal 1, Gem::Specification.class_variable_get(:@@stubs_by_name).length
@@ -1013,7 +1013,7 @@ dependencies: []
   def test_self_stubs_for_no_lazy_loading_after_all_specs_setup
     Gem::Specification.all = [util_spec('a', '1')]
 
-    save_gemspec('b-1', '1', File.join(Gem.dir, 'specifications')){|s| s.name = 'b' }
+    save_gemspec('b-1', '1', File.join(Gem.dir, 'specifications')) {|s| s.name = 'b' }
 
     assert_equal [], Gem::Specification.stubs_for('b').map {|s| s.full_name }
   end
@@ -1060,19 +1060,27 @@ dependencies: []
   def test_self_stubs_returns_only_specified_named_specs
     dir_standard_specs = File.join Gem.dir, 'specifications'
 
-    save_gemspec('a-1', '1', dir_standard_specs){|s| s.name = 'a' }
-    save_gemspec('a-2', '2', dir_standard_specs){|s| s.name = 'a' }
-    save_gemspec('a-a', '3', dir_standard_specs){|s| s.name = 'a-a' }
+    save_gemspec('a-1', '1', dir_standard_specs) {|s| s.name = 'a' }
+    save_gemspec('a-2', '2', dir_standard_specs) {|s| s.name = 'a' }
+    save_gemspec('a-a', '3', dir_standard_specs) {|s| s.name = 'a-a' }
 
     assert_equal ['a-1', 'a-2'], Gem::Specification.stubs_for('a').map(&:full_name).sort
   end
 
   def test_handles_private_null_type
-    path = File.expand_path "../data/null-type.gemspec.rz", __FILE__
+    path = File.expand_path 'data/pry-0.4.7.gemspec.rz', __dir__
 
     data = Marshal.load Gem::Util.inflate(Gem.read_binary(path))
 
-    assert_nil data.signing_key
+    assert_instance_of Gem::Specification, data
+  end
+
+  def test_handles_dependencies_with_syck_requirements_bug
+    path = File.expand_path 'data/excon-0.7.7.gemspec.rz', __dir__
+
+    data = Marshal.load Gem::Util.inflate(Gem.read_binary(path))
+
+    assert_instance_of Gem::Specification, data
   end
 
   def test_initialize
@@ -2259,15 +2267,9 @@ Gem::Specification.new do |s|
   s.rubygems_version = "#{Gem::VERSION}".freeze
   s.summary = "this is a summary".freeze
 
-  if s.respond_to? :specification_version then
-    s.specification_version = #{Gem::Specification::CURRENT_SPECIFICATION_VERSION}
-  end
+  s.specification_version = #{Gem::Specification::CURRENT_SPECIFICATION_VERSION}
 
-  if s.respond_to? :add_runtime_dependency then
-    s.add_runtime_dependency(%q<b>.freeze, [\"= 1\"])
-  else
-    s.add_dependency(%q<b>.freeze, [\"= 1\"])
-  end
+  s.add_runtime_dependency(%q<b>.freeze, [\"= 1\"])
 end
     SPEC
 
@@ -2339,15 +2341,9 @@ Gem::Specification.new do |s|
 
   s.installed_by_version = "#{Gem::VERSION}" if s.respond_to? :installed_by_version
 
-  if s.respond_to? :specification_version then
-    s.specification_version = #{Gem::Specification::CURRENT_SPECIFICATION_VERSION}
-  end
+  s.specification_version = #{Gem::Specification::CURRENT_SPECIFICATION_VERSION}
 
-  if s.respond_to? :add_runtime_dependency then
-    s.add_runtime_dependency(%q<b>.freeze, [\"= 1\"])
-  else
-    s.add_dependency(%q<b>.freeze, [\"= 1\"])
-  end
+  s.add_runtime_dependency(%q<b>.freeze, [\"= 1\"])
 end
     SPEC
 
@@ -2398,19 +2394,11 @@ Gem::Specification.new do |s|
   s.summary = "this is a summary".freeze
   s.test_files = ["test/suite.rb".freeze]
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 4
-  end
+  s.specification_version = 4
 
-  if s.respond_to? :add_runtime_dependency then
-    s.add_runtime_dependency(%q<rake>.freeze, [\"> 0.4\"])
-    s.add_runtime_dependency(%q<jabber4r>.freeze, [\"> 0.0.0\"])
-    s.add_runtime_dependency(%q<pqa>.freeze, [\"> 0.4\", \"<= 0.6\"])
-  else
-    s.add_dependency(%q<rake>.freeze, [\"> 0.4\"])
-    s.add_dependency(%q<jabber4r>.freeze, [\"> 0.0.0\"])
-    s.add_dependency(%q<pqa>.freeze, [\"> 0.4\", \"<= 0.6\"])
-  end
+  s.add_runtime_dependency(%q<rake>.freeze, [\"> 0.4\"])
+  s.add_runtime_dependency(%q<jabber4r>.freeze, [\"> 0.0.0\"])
+  s.add_runtime_dependency(%q<pqa>.freeze, [\"> 0.4\", \"<= 0.6\"])
 end
     SPEC
 
@@ -3006,7 +2994,6 @@ Please report a bug if this causes problems.
 
       @a1.homepage = 'https://rubygems.org'
       assert_equal true, @a1.validate
-
     end
   end
 
@@ -3668,6 +3655,8 @@ end
     b.activate
 
     install_specs b
+
+    Gem::Specification.reset
 
     assert Gem::Specification.find_by_name "b"
 

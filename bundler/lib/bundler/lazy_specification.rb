@@ -7,7 +7,7 @@ module Bundler
     include MatchPlatform
 
     attr_reader :name, :version, :dependencies, :platform
-    attr_accessor :source, :remote
+    attr_accessor :source, :remote, :force_ruby_platform
 
     def initialize(name, version, platform, source = nil)
       @name          = name
@@ -84,13 +84,13 @@ module Bundler
         else
           ruby_platform_materializes_to_ruby_platform? ? self : Dependency.new(name, version)
         end
-        platform_object = Gem::Platform.new(platform)
+        platform_object = ruby_platform_materializes_to_ruby_platform? ? Gem::Platform.new(platform) : Gem::Platform.local
         candidates = source.specs.search(search_object)
         same_platform_candidates = candidates.select do |spec|
           MatchPlatform.platforms_match?(spec.platform, platform_object)
         end
         installable_candidates = same_platform_candidates.select do |spec|
-          !spec.is_a?(EndpointSpecification) ||
+          spec.is_a?(StubSpecification) ||
             (spec.required_ruby_version.satisfied_by?(Gem.ruby_version) &&
               spec.required_rubygems_version.satisfied_by?(Gem.rubygems_version))
         end
@@ -152,7 +152,7 @@ module Bundler
     # explicitly add a more specific platform.
     #
     def ruby_platform_materializes_to_ruby_platform?
-      !Bundler.most_specific_locked_platform?(Gem::Platform::RUBY) || Bundler.settings[:force_ruby_platform]
+      !Bundler.most_specific_locked_platform?(generic_local_platform) || force_ruby_platform || Bundler.settings[:force_ruby_platform]
     end
   end
 end

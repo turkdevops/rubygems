@@ -4,7 +4,7 @@ module Bundler
   class Resolver
     class SpecGroup
       attr_accessor :name, :version, :source
-      attr_accessor :activated_platforms
+      attr_accessor :activated_platforms, :force_ruby_platform
 
       def self.create_for(specs, all_platforms, specific_platform)
         specific_platform_specs = specs[specific_platform]
@@ -35,6 +35,7 @@ module Bundler
 
           specs.map do |s|
             lazy_spec = LazySpecification.new(name, version, s.platform, source)
+            lazy_spec.force_ruby_platform = force_ruby_platform
             lazy_spec.dependencies.replace s.dependencies
             lazy_spec
           end
@@ -88,20 +89,20 @@ module Bundler
         dependencies = []
         @specs[platform].first.dependencies.each do |dep|
           next if dep.type == :development
-          dependencies << DepProxy.get_proxy(dep, platform)
+          dependencies << DepProxy.get_proxy(Dependency.new(dep.name, dep.requirement), platform)
         end
         dependencies
       end
 
       def metadata_dependencies(platform)
         spec = @specs[platform].first
-        return [] unless spec.is_a?(Gem::Specification)
+        return [] if spec.is_a?(LazySpecification)
         dependencies = []
-        if !spec.required_ruby_version.nil? && !spec.required_ruby_version.none?
-          dependencies << DepProxy.get_proxy(Gem::Dependency.new("Ruby\0", spec.required_ruby_version), platform)
+        unless spec.required_ruby_version.none?
+          dependencies << DepProxy.get_proxy(Dependency.new("Ruby\0", spec.required_ruby_version), platform)
         end
-        if !spec.required_rubygems_version.nil? && !spec.required_rubygems_version.none?
-          dependencies << DepProxy.get_proxy(Gem::Dependency.new("RubyGems\0", spec.required_rubygems_version), platform)
+        unless spec.required_rubygems_version.none?
+          dependencies << DepProxy.get_proxy(Dependency.new("RubyGems\0", spec.required_rubygems_version), platform)
         end
         dependencies
       end
