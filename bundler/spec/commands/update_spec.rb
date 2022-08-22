@@ -301,6 +301,66 @@ RSpec.describe "bundle update" do
       expect(lockfile).to eq(previous_lockfile)
     end
 
+    it "does not downgrade direct dependencies when run with --conservative" do
+      build_repo4 do
+        build_gem "oauth2", "2.0.6" do |s|
+          s.add_dependency "faraday", ">= 0.17.3", "< 3.0"
+        end
+
+        build_gem "oauth2", "1.4.10" do |s|
+          s.add_dependency "faraday", ">= 0.17.3", "< 3.0"
+          s.add_dependency "multi_json", "~> 1.3"
+        end
+
+        build_gem "faraday", "2.5.2"
+
+        build_gem "multi_json", "1.15.0"
+
+        build_gem "quickbooks-ruby", "1.0.19" do |s|
+          s.add_dependency "oauth2", "~> 1.4"
+        end
+
+        build_gem "quickbooks-ruby", "0.1.9" do |s|
+          s.add_dependency "oauth2"
+        end
+      end
+
+      gemfile <<-G
+        source "#{file_uri_for(gem_repo4)}"
+
+        gem "oauth2"
+        gem "quickbooks-ruby"
+      G
+
+      lockfile <<~L
+        GEM
+          remote: #{file_uri_for(gem_repo4)}/
+          specs:
+            faraday (2.5.2)
+            multi_json (1.15.0)
+            oauth2 (1.4.10)
+              faraday (>= 0.17.3, < 3.0)
+              multi_json (~> 1.3)
+            quickbooks-ruby (1.0.19)
+              oauth2 (~> 1.4)
+
+        PLATFORMS
+          #{lockfile_platforms}
+
+        DEPENDENCIES
+          oauth2
+          quickbooks-ruby
+
+        BUNDLED WITH
+           #{Bundler::VERSION}
+      L
+
+      bundle "update --conservative --verbose"
+
+      expect(out).not_to include("Installing quickbooks-ruby 0.1.9")
+      expect(out).to include("Installing quickbooks-ruby 1.0.19").and include("Installing oauth2 1.4.10")
+    end
+
     it "does not downgrade indirect dependencies unnecessarily" do
       build_repo4 do
         build_gem "a" do |s|
@@ -983,7 +1043,7 @@ RSpec.describe "bundle update --ruby" do
   context "when the Gemfile removes the ruby" do
     before do
       install_gemfile <<-G
-        ruby '~> #{RUBY_VERSION}'
+        ruby '~> #{Gem.ruby_version}'
         source "#{file_uri_for(gem_repo1)}"
       G
 
@@ -1013,12 +1073,12 @@ RSpec.describe "bundle update --ruby" do
   context "when the Gemfile specified an updated Ruby version" do
     before do
       install_gemfile <<-G
-        ruby '~> #{RUBY_VERSION}'
+        ruby '~> #{Gem.ruby_version}'
         source "#{file_uri_for(gem_repo1)}"
       G
 
       gemfile <<-G
-          ruby '~> #{RUBY_VERSION[0..2]}'
+          ruby '~> #{current_ruby_minor}'
           source "#{file_uri_for(gem_repo1)}"
       G
     end
@@ -1047,7 +1107,7 @@ RSpec.describe "bundle update --ruby" do
   context "when a different Ruby is being used than has been versioned" do
     before do
       install_gemfile <<-G
-        ruby '~> #{RUBY_VERSION}'
+        ruby '~> #{Gem.ruby_version}'
         source "#{file_uri_for(gem_repo1)}"
       G
 
@@ -1083,7 +1143,7 @@ RSpec.describe "bundle update --ruby" do
       L
 
       gemfile <<-G
-          ruby '~> #{RUBY_VERSION}'
+          ruby '~> #{Gem.ruby_version}'
           source "#{file_uri_for(gem_repo1)}"
       G
     end

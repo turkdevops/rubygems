@@ -9,9 +9,12 @@ AllCops:
     - bundler/**/Rakefile
     - bundler/**/Gemfile
     - bundler/**/*.rake
+    - bundler/**/Executable
+    - bundler/**/Executable.*
   Exclude:
     - bin/*
     - pkg/**/*
+    - tmp/**/*
     - util/**/*
     - bundler/tmp/**/*
     - bundler/lib/bundler/vendor/**/*
@@ -172,6 +175,7 @@ Lint/ScriptPermission:
   Enabled: true
   Exclude:
     - 'bundler/lib/bundler/templates/Executable'
+    - 'bundler/lib/bundler/templates/Executable.*'
 
 Lint/ShadowedArgument:
   Enabled: true
@@ -346,7 +350,6 @@ Layout/MultilineMethodDefinitionBraceLayout:
 
 Layout/MultilineOperationIndentation:
   Enabled: true
-  EnforcedStyle: indented
 
 Layout/SpaceBeforeComma:
   Enabled: true
@@ -478,6 +481,9 @@ Performance/Size:
   Enabled: true
 
 Performance/StartWith:
+  Enabled: true
+
+Performance/StringInclude:
   Enabled: true
 
 Performance/StringReplacement:

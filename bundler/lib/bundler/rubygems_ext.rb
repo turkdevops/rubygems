@@ -15,10 +15,21 @@ require "rubygems/specification"
 # `Gem::Source` from the redefined `Gem::Specification#source`.
 require "rubygems/source"
 
+require_relative "match_metadata"
 require_relative "match_platform"
+
+# Cherry-pick fixes to `Gem.ruby_version` to be useful for modern Bundler
+# versions and ignore patchlevels
+# (https://github.com/rubygems/rubygems/pull/5472,
+# https://github.com/rubygems/rubygems/pull/5486). May be removed once RubyGems
+# 3.3.12 support is dropped.
+unless Gem.ruby_version.to_s == RUBY_VERSION || RUBY_PATCHLEVEL == -1
+  Gem.instance_variable_set(:@ruby_version, Gem::Version.new(RUBY_VERSION))
+end
 
 module Gem
   class Specification
+    include ::Bundler::MatchMetadata
     include ::Bundler::MatchPlatform
 
     attr_accessor :remote, :location, :relative_loaded_from
@@ -145,6 +156,10 @@ module Gem
     attr_accessor :source, :groups
 
     alias_method :eql?, :==
+
+    def force_ruby_platform
+      false
+    end
 
     def encode_with(coder)
       to_yaml_properties.each do |ivar|

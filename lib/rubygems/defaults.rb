@@ -161,7 +161,7 @@ module Gem
     path = []
     path << user_dir if user_home && File.exist?(user_home)
     path << default_dir
-    path << vendor_dir if vendor_dir and File.directory? vendor_dir
+    path << vendor_dir if vendor_dir && File.directory?(vendor_dir)
     path
   end
 
@@ -171,7 +171,7 @@ module Gem
   def self.default_exec_format
     exec_format = RbConfig::CONFIG["ruby_install_name"].sub("ruby", "%s") rescue "%s"
 
-    unless exec_format =~ /%s/
+    unless exec_format.include?("%s")
       raise Gem::Exception,
         "[BUG] invalid exec_format #{exec_format.inspect}, no %s"
     end
